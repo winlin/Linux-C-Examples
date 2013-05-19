@@ -1,0 +1,487 @@
+1.访问数据库的技术
+	plsql	-----------数据库内部访问技术
+	proc/c++  ---------c/c++访问服务器的语言
+
+	PL/SQL(Procedual Language/SQL) 是在标准SQL的基础上增加了过程化处理的语言；
+			 ( 过程化：是指支持IF-ELSE/FOR/WHILE等结构化程序语言 )
+	Oracle客户端工具访问Oracle服务器的操作语言
+	Oracle对SQL的扩充
+	但是，不利于向异构数据库移植应用程序。Oracle数据库会把PLSQL语句存储到数据库内部，所以效率较高。
+	--------------------------------------------------
+	set serveroutput on -----打开服务器端的输出
+	--------------------------------------------------
+	begin 
+	      dbms_output.put_line('hello world!');
+	end;
+	--------------------------------------------------
+
+	PL/SQL块
+		--申明区     DECLARE
+		--执行部分   BEGIN
+		--异常处理   EXCEPTION	
+		
+		赋值----   :=
+		比较----    =
+	PL/SQL 对大小写不敏感.
+
+	变量声明的语法：
+	var_name [constant] type[not null] [:=value];
+	
+	const 代表常量：
+	      变量必须有初值，可以加not null；
+	如果一个变量没有初值，默认为null .
+	ref 引用类型。
+	变量名最长 30 个字符。
+	%type 类型
+	      v_name s_emp.name%type; 这样 v_name 的类型就和s_emp.name完全一样
+	
+	RECORD 类型：
+	       TYPE exp_rec IS RECODR (
+	       	    id  number,
+		    name  varchar2(20)
+	       );   
+	       
+	       v_rec exp_rec ;  定义的变量 v_rec 类型是 exp_rec.
+	
+	%rowtype
+		var_row  s_emp%rowtype;   //%rowtype 取表的一行作为类型
+
+
+	数组：table类型
+	TYPE tabletype IS TABLE OF type INDEX BY BINARY_INTEGER.
+	
+	declare
+		type  table_number is table of char(20) index by binary_integer;
+		var_t table_number;    --要定义table类型的变量才可以使用
+	begin
+		var_t(1) := 'hello world';
+		dbms_output.put_line(var_t(1));
+	end;
+	--------------------------------------------------
+	--定义一个%rowtype记录类型的table来存储数据，并显示：
+	declare 
+		type tab_record is table of s_emp%rowtype index by binary_integer;
+		var_tab tab_record;
+	begin
+		select * into var_tab(1) from s_emp where id=1;
+		select * into var_tab(2) from s_emp where id=3;
+		select * into var_tab(3) from s_emp where id=5;
+		dbms_output.put_line(var_tab(1).id||'  '||var_tab(1).last_name);
+		dbms_output.put_line(var_tab(2).id||'  '||var_tab(2).last_name);
+		dbms_output.put_line(var_tab(3).id||'  '||var_tab(3).last_name);
+		--dbms_output.put_line(var_tab(3));不可以直接输出table
+	end;
+	--------------------------------------------------
+
+	变量的可见性：
+		想要在内部块中访问外部块的同名变来年该 v_num ,只需要在变量名前添加outer即可：
+		outer.v_num 
+
+
+	--------------------------------------------------
+	控制语句：
+	       注意 for循环中的变量是自动加1的，所以不要在for里面再对变量进行累加
+	       for n in var_tab.first()..var_tab.last() loop
+	       	   --...
+	       end loop;
+	       --适用于在var_tab里面连续存储
+	--------------------------------------------------
+	--循环打印1-10
+	declare 
+		i number :=1 ;
+		begin 
+		      loop
+		      	if i<11 then
+			    dbms_output.put_line(i);
+			else
+			    exit;
+		        end if;
+        		i:=i+1;
+     			end loop;
+	end;
+	--------------------------------------------------
+	begin
+		for a in 1..10 loop
+		    dbms_output.put_line(a);
+		    -- a:=a+2; 这一句是错误的，a不可以被赋值，也就意味着步进只能为1
+		end loop;
+	end;
+        --a 变量可以不提前定义，就可以直接使用
+	--------------------------------------------------
+	--把s_emp里面的内容放到一个table里面，并打印内容
+	declare
+		type emp_table is table of s_emp%rowtype index by binary_integer;
+		v_table emp_table;
+		mycount number;
+	begin
+		select count(*) into mycount from s_emp;
+		for i in 1..mycount loop
+		    select * into v_table(i) from s_emp where id=i;
+		    dbms_output.put_line(v_table(i).id||'  '||v_table(i).last_name);
+		 end loop;
+        end;	
+	--id不连续的情况下table数据的存储和输出
+	declare 
+		type table_t is table of s_emp%rowtype index by binary_integer;
+		var_emp table_t;
+		var_n number;
+	begin
+		select * into var_emp(1) from s_emp where id=1;
+		select * into var_emp(3) from s_emp where id=2;	
+		select * into var_emp(100) from s_emp where id=3;
+	
+	--为了解决不连续下标，Oracle引入了三个函数
+	--frist()  返回table中的第一个有数据的下标
+	--last()   返回table中的最后一个有数据的下标
+	--next(n)  得到n这个下标的下一个下标
+		var_n:=var_emp.first();
+		loop
+			dbms_output.put_line(var_emp(var_n).id||':'||var_emp(var_n).last_name);
+			if(var_n=var_emp.last()) then
+				exit;
+			end if;
+			var_n:=var_emp.next(var_n);
+		end loop;
+	end;
+	--------------------------------------------------
+	declare 
+		v_emp_id number(5):=10;
+		v_last_name varchar2(20);
+	begin
+		select last_name into v_last_name
+		from s_emp
+		where id=v_emp_id;
+		
+		dbms_output.put_line(v_last_name);
+	exception
+		when no data found then
+		     insert into log_table(info)
+		     values('Student 10 does exit!');
+	end;
+	--------------------------------------------------
+	选出工资最高的部门id和该部门工资：(注意 into的使用方式)
+	declare
+	       v_dept_salary number;
+       	       v_dept_id number;
+        begin
+	      select sum(salary),dept_id into v_dept_salary,v_dept_id  from s_emp group by 
+	      dept_id having 
+	        	sum(salary)=(select max(sum(salary)) from s_emp group by dept_id);
+      	     dbms_output.put_line('Salary:'||v_dept_salary||'  Dept_id:'||v_dept_id);
+        end;
+	--------------------------------------------------
+		
+	--------------------------------------------------
+	replace()函数
+	select replace(last_name,'a','y') from s_emp;
+	
+	--------------------------------------------------
+	CURSOR 游标  ： 用于一次性提取多行数据集，然后每一次fetch都返回一条记录
+	
+	   1.声明游标
+		cursor emp_cursor is select * from s_emp;
+	   2.为查询打开游标
+		open emp_cursor;
+	   3.将结果提取出来，存入PL/SQL的变量中
+		fetch emp_cursor into 变量;
+	   4.关闭游标
+		close emp_cursor
+	 对于游标的操作for循环是最简单的，但是要注意不要做额外的操作：
+	 属性：
+		notfound
+		found
+		isopen
+		rowfound
+	 
+	 fetch的语法:
+		fetch cursor_name into var1,var2,...;
+		fetch cursor_name into record_var;
+		
+	--带参游标：
+		注意：游标的参数一定不要指定宽度
+	 --------------------------------------------------
+	 declare
+		cursor emp_cursor(cpar number) is select * from s_emp where id>cpar;  --声明带参游标
+		one_record s_emp%rowtype;
+	 begin
+		open emp_cursor(7);
+		fetch emp_cursor into one_record;
+		dbms_output.put_line(one_record.id||' : '||one_record.last_name);
+		close emp_cursor;
+         end;
+	--------------------------------------------------	
+         使用loop循环操作cursor
+	 loop
+	      fetch ...
+	      exit when cursor_name%notfound ;
+	 end loop;
+	 使用while循环操作cursor
+	 fetch cursor into ..
+	 while cursor%found loop
+	       fetch ...
+	 end loop;
+	 --------------------------------------------------
+	 declare
+		cursor emp_cursor is select * from s_emp;
+		one_record s_emp%rowtype;
+	 begin
+		open emp_cursor;
+		fetch emp_cursor into one_record;
+		dbms_output.put_line(one_record.id||' : '||one_record.last_name);
+		close emp_cursor;
+         end;
+	 -------------------------------------------------- 
+         declare
+		cursor emp_cursor is select * from s_emp;
+	 begin
+		for var in emp_cursor loop
+		    dbms_output.put_line(var.id||' : '||var.last_name);
+		end loop;
+         end;
+	 --for循环会做很多有效的事，包括打开/关闭/fetch cursor等操作都可在for中省略
+	 --------------------------------------------------
+	 --注意，while循环必须先提取一次才可以继续fetch
+	 declare
+		cursor emp_cursor is select * from s_emp;
+		one_record s_emp%rowtype;
+	 begin
+		open emp_cursor;
+		fetch emp_cursor into one_record;
+		while emp_cursor%found loop
+		        dbms_output.put_line(one_record.id||' : '||one_record.last_name);
+			fetch emp_cursor into one_record;
+		end loop;
+		close emp_cursor;
+         end;
+	 --------------------------------------------------
+
+	 小知识点：
+	 select * from s_emp for update;  --在查询时锁定这张表，别人都可以查找，但是不可以修改
+	 --------------------------------------------------
+
+	 EXCEPTION 异常：
+	 运行时的出错：
+	 	
+	 declare 
+	 	 var_n number;
+	 begin
+		select id into var_n from s_emp where id >5;
+	 exception
+		when TOO_MANY_ROWS then
+		dbms_output.put_line('TOO_MANY_ROWS');
+		--比较合理的处理是向日志表中添加说明异常发生
+		--以备以后错误的处理
+		when DUP_VAL_VALUE then
+		rollback;
+		insert into log_table(info)
+		       values('DUP_VAL_VALUE apper and commit ROLLBACK');
+	 end;
+	 --------------------------------------------------
+	 自定义异常
+	 declare 
+	 	 too_many_emps  exception;
+		 v_emp   s_emp%rowtype;
+		 v_n     number;
+	 begin
+		select count(*)	 into v_n from s_emp;
+		if(v_n>1) then
+			raise too_many_emps;
+		end if;
+		dbms_output.put_line('throw the exception ,left code will not conduct.');
+	 exception
+		when too_many_emps then
+		     dbms_output.put_line('My exception too_many_exception');
+         end;
+	 注意：如果想要抛出自己的异常，sql语句就不应该抛出系统异常，因为会改变程序的执行序列.
+	       处理完系统以后，执行流不会继续执行剩余的代码，而是退出。
+	 
+	 如果我们想捕获所有的异常，可以使用 “OTHERS”,把它放到所有异常之后
+	 exception 
+		when others then
+		     dbms_output.put_line('others');
+	 end;
+====================================================================================================
+	PL/SQL 中最要的  过程 和 函数
+
+	把完成某项功能的代码起一个名字，放入数据库中
+
+	create or replace procedure abc(var_p varchar2) is
+	begin 
+	      for i in 1..100 loop
+	      	  dbms_output.put_line(var_p);
+	      end loop;
+	end;
+
+	然后就可以使用 exec/call 来调用我们定义的过程就行。注意，使用call调用，过程名必须添加()
+	如果含有参数，则调用的时候： exec abc('abc');
+			注意：如果参数为字符串的话，不要指定长度。
+	注意：命名过程的声明区是在 is 和 begin 之间
+
+	create table abc_table(id number primary key,
+	       	     name varchar2(30),
+		     age number);
+	create sequence v_seq;
+	create or replace procedure inser_stu(v_name varchar2,v_age number) is
+	--声明区
+	begin
+		insert into abc_student(id,name,age) values(v_seq.nextval,v_name,v_age);
+		commit;
+	end;
+	--------------------------------------------------
+	--动态SQL语句
+	--注意字符串字段
+	create or replace procedure addstudent(var_name varchar2,var_age number)
+	is
+		sqlstr varchar2(100);
+	begin
+		sqlstr:='insert into student 
+				values(test_s_s.nextval,'''||var_name||''','||var_age||')'; 
+		dbms_output.put_line(sqlstr);
+		execute immediate sqlstr;
+		commit;
+	end;
+	如果执行时，发现sql是一个字符串变量，那这样的sql属于动态sql。
+	如果想要在PL/SQL里面执行DDL语句，创建表等，需要转成 动态sql，然后使用 execute immediate 执行。
+	
+	--------------------------------------------------
+	存储过程的参数
+	     参数的默认类型：
+			in  ---- 负责输入的参数
+			out ---- 负责输出的参数 ，带回返回值
+			in out ---- 即负责输入又负责输出
+	如果过程的参数的类型是out类型的，那就无法在命令行中调用该过程；只能在别的存储过程 或 者匿名块中调用。
+	create or replace procedure get_cnt(v_out out number) is
+	begin
+		select count(*) into v_out from s_emp;
+		commit;
+	end;	
+	--定义匿名的调用块
+	declare 
+		v_num number;
+	begin
+		get_cnt(v_num);
+		dbms_output.put_line(v_num);
+	end;
+	-- 注意：有out类型或者in out类型的参数时，传递的参数必须是变量。
+	   	查看过程的命令也是 desc
+		
+	--------------------------------------------------
+	show errors;显示错误
+	函数：   函数必须有返回值	
+
+	create or replace function get_cnt_fun return number
+	is
+	var_c number;
+	begin
+		select count(*) into var_c from s_emp;
+		return var_c;
+	end get_cnt_fun;
+
+	--call function
+	declare
+		var_n number;
+	begin
+		var_n :=get_cnt_fun() ;
+		dbms_output.put_line(var_n);
+	end;
+		
+	--------------------------------------------------
+	包
+	dbms_output   --- 输出包
+	dbms_job      --- 定时任务调度
+	dbms_random   --- 生成随机数
+	
+	--创建一个包头
+	create or replace package abc_pack is
+	       procedure addstudent(age number);
+	       function  getempcount return number;
+	       end;  
+	 --创建一个包体
+	 create or replace package body abc_pack is
+	 	procedure  addstudent(age number) 	  
+			   is
+			   begin
+				dbms_output.put_line('addstudent');
+			   end;
+		function    getempcount return number
+			    is
+				var_c number;
+			    begin
+				var_c:=100;
+				return var_c;
+			    end;
+	end;
+	--测试
+		select abc_pack.getempcount() from dual;
+
+	--------------------------------------------------
+	触发器
+	      在主表 和 子表之间，删除主表的键时有：
+	      	     on delete cascade
+		     on delete set null
+	      怎样更新主表的时候，同时改变与之关联的子表？
+		     
+	   触发器的作用：
+		1.维护数据的完整性
+		2.执行一些审计，跟踪功能
+		3.触发的时候调用指定程序
+	   
+	   出发的事件：insert/update/delete
+	   触发器的种类：12种
+
+	   create or replace trigger abcd_trigger
+	   	  before delete or update on abc_student for each row
+		  declare
+		  begin
+		  dbms_output.put_line('trogger call success');
+		  end;
+	 --这样不管你删除是否成功，都会先触发 ，before
+	 --如果使用的是after，则只有成功了以后才会触发
+	 --使用了for each row ,那么对每一行进行的操作都会触发触发器
+	   如果没有 for each row ，那么该表的多行操作只会有一次触发
+
+	   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		

@@ -1,0 +1,36 @@
+#include "dmsdao.h"
+#include <strings.h>
+#include <iostream>
+using namespace  std;
+EXEC SQL INCLUDE SQLCA;
+void DMSDAO::connect(char *user)
+{ 
+   EXEC SQL BEGIN DECLARE SECTION;
+   char  username[30]; 
+   EXEC SQL END  DECLARE SECTION; 
+   strcpy(username,user);
+   EXEC SQL CONNECT:username;
+   cout<<"connect sqlcode"<<sqlca.sqlcode<<endl;
+}
+void DMSDAO::save(logdata data)
+{	
+//	cout<<data.logname<<":"<<data.logip<<":"<<data.labip<<endl;
+        /*这里请使用proc数据库访问技术保存数据到数据库 */
+	EXEC SQL BEGIN DECLARE SECTION;
+	char sqlstr[200];
+	EXEC SQL END DECLARE SECTION;
+        sprintf(sqlstr,"insert into  logdetails values (%s,'%s',%d,%d,%d,'%s','%s')","logdata_s.nextval",data.logname,data.logintime,
+	         data.logouttime,data.durations,data.logip,data.labip);
+        EXEC  SQL  EXECUTE IMMEDIATE:sqlstr;
+           
+}
+void DMSDAO::close()
+{
+ EXEC SQL COMMIT RELEASE; 
+}
+
+void  DMSDAO::commit()
+{
+ EXEC  SQL  COMMIT; 
+}
+

@@ -1,0 +1,74 @@
+获得一行数据
+	getline();
+	scanf("%[^\n]",line);
+	fgets();   //但是会把最后的回车也录进去
+	scanf("%*c");  //丢弃一个字符
+
+system()注意事项：
+system(command)会调用/bin/sh -c command来执行传递的命令。
+如果多次调用system()来执行命令，并且该次调用的命令需要用到上次执行
+system的命令时，由于上次的子shell已经退出，会导致错误出现。
+
+#include <stdlib.h>
+getenv()
+setenv()
+
+#include <unistd.h>
+getlogin()
+
+getuid() returns the real user ID of the calling process.
+geteuid() returns the effective user ID of the calling process.
+
+cuserid() returns  a  pointer  to  a  string  containing  a username
+ associated with the effective user ID of the process.    
+
+setuid()
+
+int gethostname(char* name,size_t len)
+int sethostname(const char* name,size_t ;en)
+
+getcwd() 返回当前工作目录
+chdir()  设置当前工作目录
+
+getpwnam()
+getpwnam, getpwnam_r, getpwuid, getpwuid_r - get password file entry
+ 	   #include <sys/types.h>
+           #include <pwd.h>
+
+       struct passwd *getpwnam(const char *name);
+
+       struct passwd *getpwuid(uid_t uid);
+
+       int getpwnam_r(const char *name, struct passwd *pwd,
+                   char *buf, size_t buflen, struct passwd **result);
+
+       int getpwuid_r(uid_t uid, struct passwd *pwd,
+                   char *buf, size_t buflen, struct passwd **result);
+The  getpwnam()  function  returns  a pointer to a structure containing the broken-out fields of the record 
+in the password database (e.g., the local password file /etc/passwd, NIS, and LDAP) that matches the username name.
+The getpwuid() function returns a pointer to a structure containing the broken-out fields of  the  record  
+in  the password database that matches the user ID uid.
+
+在UC里面结构体的成员基本上都是结构体名字的缩写加上下划线开头，如“*pw_name”.
+
+
+access() 判断一个目录或文件是否存在
+#include <unistd.h>
+int access(const char *pathname, int mode);
+
+取得文件信息：
+stat()
+fstat()	   处理已经打开文件的信息
+lstat()    处理符号链接文件本身
+#include <sys/stat.h>
+int stat(const char *restrict path, struct stat *restrict buf);
+
+remove() 删除文件/空目录
+remove() deletes a name from the file system.  It calls unlink(2) for files, and rmdir(2) for directories.
+#include <stdio.h>
+int remove(const char *pathname);
+
+时间相关
+time(NULL)
+#include <time.h>
+

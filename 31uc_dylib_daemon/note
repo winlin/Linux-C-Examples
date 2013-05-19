@@ -1,0 +1,60 @@
+>>>>>>>>>>
+精灵进程，又称守护进程
+建立一个精灵进程的步骤：
+1.结束父进程
+2.关闭所有的文件描述符
+3.设置自己的会话ID
+4.改变权限修饰符
+5.改变当前目录
+6.做你要进行的工作
+
+>>>>>>>>>>
+静态库和动态库
+
+静态库：
+首先使用gcc -c的选项来进行编译源文件，生成".o"文件
+再使用ar -r 来归档成一个函数 :
+ar -r libuser.a id.o user.o
+(其中的“user“称作库名，最后链接的时候，可以使用库名来链接，使用 -luser指定gcc到-L指定的目录中去寻找libuser.a库文件
+ -Ldir可以跟具体路径来指定库的位置。)
+
+可以使用-d选项从静态库中删除一个文件：
+ar -d id.o
+使用-x提取一个文件
+ar -x user.o
+
+最后，和使用该库的文件一起编译：
+gcc libuser.o test.c -o test
+
+>>>>>>>>>>>>>
+动态库   libxxx.so    share object
+使用：gcc -shared -fpic dll.c -o libdy.so
+
+export LD_LIBRARY_PATH=.
+可以把自己的动态库放到 /usr/lib；/lib/ 等特定目录里面；
+也可以设置 LD_LIBRARY_PATH 来指定动态库的位置。
+也可以在编译时指定位置：gcc test.c -ldy -L.
+			    
+ldd a.out 可以查看一个可执行文件依赖的动态库
+
+>>>>>>>>>>>>>>>
+我们也可以自己在程序中加载一个动态库
+
+NAME
+       dladdr, dlclose, dlerror, dlopen, dlsym, dlvsym - programming interface
+       to dynamic linking loader
+
+SYNOPSIS
+       #include <dlfcn.h>
+
+       void *dlopen(const char *filename, int flag);  //打开一个动态库文件
+
+       char *dlerror(void);   //用来查看是否出错
+
+       void *dlsym(void *handle, const char *symbol); //根据symbol来获得
+       //在handle里面的一个标号的地址
+
+       int dlclose(void *handle);  //关闭一个打开的头文件
+ 
+       Link with -ldl.   编译的时候 -ldl
+

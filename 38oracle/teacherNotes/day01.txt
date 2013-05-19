@@ -1,0 +1,308 @@
+oracle-----甲骨文
+    oracle,mysql  -----oracle   48.6
+    db2           -----IBM      22
+    sqlserver     -----mic      15
+    
+war 
+    数据库开发
+    SQL  ------3
+    PLSQL------1.5
+    PROC/C++---1.5
+    
+    DMS  ------3         
+    ping  172.18.9.6
+    
+数据存储:1T--1024G------4G
+        
+    早期的数据存储 -----文件
+    海量级------查找速度
+    程序帮你读取  删除 增加(管理)----数据库管理系统---DBMS
+    数据存储在文件-----DB
+    
+    数据库文件的格式：
+    名字  员工号  年龄  性别  ----表头
+    tom   001     20    nan  ----行(row)  -----记录
+    列(字段)（column）
+    二维表 ---------关系型数据库
+    数据库对应的最小单位是二维表
+    二维表对应的最小存储单元 ----row 
+    一条记录的最小存储单元------column
+程序访问数据库-----oracle提供的sqlplus
+远程登录服务器
+    telnet IP(172.18.9.6) 
+    telnet 192.168.0.26
+    login: openlab
+    passwd:open123
+    bash$
+    sqlplus openlab/open123
+    sqlplus scott/tiger
+    
+    SQL>
+
+    !clear
+    clear   screen
+    SQL>desc 表名 
+    SQL>desc s_emp
+  Name                                      Null?    Type
+ ----------------------------------------- -------- -------------
+ ID (在表中数据的唯一编号)                  NOT NULL NUMBER(7)
+ LAST_NAME（姓）                           NOT NULL VARCHAR2(25)
+ FIRST_NAME(名)                                     VARCHAR2(25)
+ USERID（员工号）                                    VARCHAR2(8)
+ START_DATE (入职日期)                               DATE
+ COMMENTS (说明)                                     VARCHAR2(255)
+ MANAGER_ID(领导id)                                  NUMBER(7)
+ TITLE（职位）                                       VARCHAR2(60)
+ DEPT_ID（部门编号）                                  NUMBER(7)
+ SALARY（工资）                                       NUMBER(11,2)
+  （提成）                               NUMBER(4,2)  
+
+
+SQL>spool  文件名   ----退出之后不在存储到文件
+   
+如果想继续存入敲入的命令和结果-----SQL>spool  文件名
+
+number   ---数字类型 
+varchar2 ---字符串类型
+date     ---日期类型
+
+sql语句
+   A select(查询 选择)  
+     select {*，字段名,[字段名，字段名]} from  表名;
+     {} ----选择
+     [] ----可选  
+     select * from 表名;
+     select id from s_emp;
+     select id,last_name,salary from s_emp;
+     a/i/o/O  
+     
+     ZZ -----保存退出
+     ppt  summit2.sql  
+
+     搭建环境
+     1.把summit2.sql 传到服务器
+     2.telnet 到服务器
+     3.sqlplus 之后运行文件summit2.sql
+     select [distinct] {*，字段名[alias],[字段名，字段名]} from  表名;
+     distinct -----排重
+     把所有的职位查询出来
+     select title from s_emp;
+     select distinct  title from s_emp;
+     alias ---- 别名
+     select title zhiwei from s_emp;
+     默认显示成大写 ------在别名上加双引号------小写显示
+     select title "zhiwei" from s_emp;
+     
+     c中连接字符串 
+     数据库中连接字符串 ----- ||
+     把所有人的姓名拼接之后显示
+     select last_name, first_name from s_emp;---error
+     select last_name||first_name from s_emp;
+     
+     + - * / 
+     把每个人的年薪统计出来
+     select salary from s_emp;
+     select salary*12 from s_emp; 
+     
+     大家把每个人的提成查询出来  
+     select COMMISSION_PCT  from s_emp;
+     空值
+     NULL--------c (void*)0
+     NULL--------未知值  不同于空格 空字符串  
+         任何值和NULL做运算得到的是NULL
+     把提成加入到年薪的计算
+     select first_name,salary*12 from s_emp;  //logic error
+     oracle 提供一个函数nvl-----空值处理函数
+     nvl(p1,p2);
+     要求p1和p2类型必须一致
+     p1是要处理的数据 p2是当p1是NULL函数返回p2的值
+       如果p1非空 返回p1
+     结果出来之后再处理
+     select first_name,
+         nvl(salary*12+salary*12*(COMMISSION_PCT/100),0) 
+	 "year salary" 
+         from s_emp;
+    先处理后计算
+     select first_name,
+         salary*12+salary*12*(nvl(COMMISSION_PCT,0)/100) 
+	 "year salary" 
+         from s_emp;
+     select first_name,
+         salary*12*(1+(nvl(COMMISSION_PCT,0)/100)) 
+	 "year salary" 
+         from s_emp;
+   测试表-------dual----单行单列表
+   sysdate------oracle当前日期
+   select sysdate from dual; -----1
+   select sysdate from s_emp;-----25
+   select nvl(sysdate,'01-AUG-11') from dual;
+   select nvl(NULL,'01-AUG-11') from dual;  
+     
+   B where(条件 限制记录)----选择 
+     salary 大于1000的员工
+     select * from s_emp where  salary>1000;
+     
+     select last_name,salary from s_emp;----投影
+
+     select last_name,salary from s_emp where salary>1000;
+     选择+投影
+     注意:* 能代表所有的列  慎用
+
+     join是当你查询的数据不在一张表中时用
+
+     字面值------1 2  'abc' 
+     '------'''' -----'告诉oracle引擎转义  
+     lastname'firstname
+     zhang'san
+     select last_name||''''||first_name from s_emp;
+     select last_name||123||first_name from s_emp;
+
+     注意:单引号的表达
+
+     双引号-----别名
+     小写  特殊字符  last_name my name
+     select last_name "my name" from s_emp;
+     逻辑比较的 ---和c中使用相同  注意等号
+     注意 等于号用一个=
+     找出 id 等于1的人的名字
+     select last_name||first_name  name from s_emp where id=1;
+     sql的比较运算符 
+     select last_name||first_name  name 
+         from s_emp where id in(1,3,5);
+     like  'aa' like 'aaa' true  'aa'  like 'aab' true
+     %----0到n个任意字符
+     _----1一个任意字符
+     where name like 'wang%'
+     last_name 带a的
+     select last_name from s_emp  where last_name like '%a%';
+     表达NULL时 是不是空  is null
+     找出manager_id 是空的人的名字
+     select last_name,manager_id from s_emp 
+         where manager_id  is null;
+     between a  and b   [a,b]----闭区间
+     工资 800 到1500的人
+     select last_name,salary from s_emp
+         where salary between  800 and 1500;
+     注意：1.in 中的数据排放1 90%  10% 把概率高的放前面
+           2.null的判断用 is
+	   3.between  a and b 是一个闭区间 
+	   4.like 应用于模糊查询  %  _ 
+	   表名带有_
+	   user_tables的表
+	   table_name ----表面
+           select table_name from user_tables where
+	       table_name like '%\_%' escape '\';
+	   转义------为什么要转义
+
+	   补充------user_tables-----数据字典表
+	   存储的数据都是大写的
+	   表名是s_emp 表相关的信息
+	   select * from user_tables where table_name like 'S\_EMP'
+	     escape '\';
+	   逻辑运算符
+	   and   or  not 
+           工资 800 到1500的人
+	   select last_name,salary from s_emp  where
+	        800<=salary<=1500;//error
+           select last_name,salary from s_emp  where
+	        salary>=800 and salary<=1500;
+	   
+	   如何来表非
+	   null   ----is  null ----is not null
+	   in     ----in(list) ----not in
+	   (同理 like , between and)
+	   等于=
+	   !=  <>  ^=
+	   select id from s_emp where id!=1;
+	   select id from s_emp where id^=1;
+
+	   注意:not in------如果有null值 则不能用not in 
+           select  COMMISSION_PCT from s_emp 
+	       where COMMISSION_PCT in(10);
+           select  COMMISSION_PCT from s_emp 
+	       where COMMISSION_PCT not in(10);  
+	   select  COMMISSION_PCT from s_emp 
+	       where nvl(COMMISSION_PCT,0) not in(10);
+   找出41部门的所有人 和 42部门的并且42部门的员工工资大于1000的员工
+   提示如果想表达的更清楚 可以使用小括号
+   select last_name,salary from s_emp
+       where dept_id=41 or (dept_id=42 and salary>1000);
+   ----这条选择出来的数据可能更多一点？
+
+   找出 要求工资大于1000 的员工 并且 部门是41或者42部分的员工 
+   select last_name,salary from s_emp
+       where salary>1000 and (dept_id=42 or dept_id=41);
+   select salary*12+100 from s_emp; ----过节一年多发100
+   select (salary+100)*12  from s_emp;---每个月多发100
+   C order by(排序)
+     按姓升序排序显示 last_name,salary
+     默认的排序----自然顺序 字典顺序  升序 （asc）
+     select last_name,salary from s_emp order by  last_name;
+     按工资升序 显示last_name salary
+     select last_name,salary from s_emp  order by salary asc;
+     降序
+     select last_name,salary from s_emp  order by salary desc;
+
+     select last_name,salary from s_emp  order by 1;
+     select last_name,salary from s_emp  order by 2 desc;
+     (1,2代表查询字段的位置)
+     排序可以按多列排序
+     select title,salary from s_emp  
+         order by title,salary;
+     先按第一个字段排序  如果第一个字段值相同 再按第二个字段排序
+     select title,salary from s_emp  
+         order by title,salary desc;
+     先按职位降序 职位相同再按工资升序
+     select title,salary from s_emp  
+         order by title desc,salary;
+     排序规则没个字段都要说明清楚 如果不说明 就是默认规则
+     注意：1.order by 后出现的字段可以不出现在select后
+           2.注意NULL  在排序中是无穷大
+     select last_name,commission_pct from s_emp 
+          order by  commission_pct;
+   D function 函数
+     单行函数------每一条记录处理后产生一个返回值
+         select nvl(manager_id,0) from s_emp;   
+         upper
+	 select upper('abc') from dual;
+
+	 select initcap('one world one dream') from dual;
+	 select concat('hello','world') from dual;
+	 等价于
+	 select 'hello'||'world' from dual;
+	 select substr('hello',1,4) from dual;
+	 注意substr的索引从1开始
+         length
+	 select length(last_name),last_name from s_emp;
+         只显示last_name开始的两个字母
+         select last_name,substr(last_name,1,2) from s_emp;
+  
+	 只显示last_name最后的两个字母
+         select last_name,substr(last_name,length(last_name)-1,2) from s_emp; 
+	 负数代表从后向前数
+         select last_name,substr(last_name,-2,2) from s_emp; 
+找出last_name 长度是5的员工
+
+first_name 是 Carmen的
+sql语句不区分大小写
+SELECT FIRST_NAME FROM S_EMP where first_name='Carmen';
+SELECT FIRST_NAME FROM S_EMP where lower(first_name)='carmen';
+
+
+1.找出和Carmen职位相同的人
+  第一步先把Carmen的职位查出来
+  再查询和这个职位相同的人
+ 
+2.查询工资大于1000的 员工按工资降序 工资相同按名字降序
+
+3.查询出id是1,3,5的员工 不允许用in
+
+4. 找出last_name长度是4 并且工资大于1500的员工 按工资升序
+
+     多行函数------对一组记录处理后产生一个返回值---组函数
+         select count(nvl(manager_id,0)) from s_emp;
+ 笛卡尔集
+   *E muti table select(多表查询)
+   F group by （分组  组函数）
+   G sub  query(子查询)
+ 

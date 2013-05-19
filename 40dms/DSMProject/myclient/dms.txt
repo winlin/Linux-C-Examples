@@ -1,0 +1,30 @@
+定义出data.h
+
+写出logreader.h
+loginfail
+backfilename
+logfilename
+
+写出logreader.h的实现logread.cpp
+一共是5个私有函数
+
+一个公共函数
+    发送匹配记录
+
+
+写出发送类的头文件 
+ip  
+port
+fd
+fail数据的保存
+
+
+建立scoket之后 就是服务端
+
+
+
+
+
+
+
+

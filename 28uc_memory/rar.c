@@ -1,0 +1,199 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#define MAX_LEN 256
+
+/* file info struct */
+typedef struct fileDes{
+	int nameLen;
+	char name[MAX_LEN];
+	unsigned long fileSize;
+}fileDes;
+
+/* set a fileDes variable */
+void setDes(fileDes* des,const char* str,unsigned long size)
+{
+	memset(des->name,0,sizeof(des->name));
+	int j=strlen(str)-1;
+	while(str[j]!='/'&&j>0)
+		j--;
+	if(j==0)
+		strcpy(des->name,str);
+	else
+		strcpy(des->name,str+j+1);
+	des->nameLen=strlen(des->name);
+	des->fileSize=size;
+}
+
+/* get the number of file in the Compress file */
+int getFileNums(int tarfd)
+{
+	if(lseek(tarfd,-sizeof(int),SEEK_END)==-1){
+		printf("lseek file failed.\n");
+		exit(-1);
+	}
+	int fileNums=0;
+	if(read(tarfd,&fileNums,sizeof(int))==0){
+		printf("read file failed.\n");
+		exit(-1);
+	}
+	if(lseek(tarfd,0,SEEK_SET)==-1){
+		printf("lseek file failed.\n");
+		exit(-1);
+	}
+
+	return fileNums;
+}
+
+int main(int argc,char* argv[])
+{
+	/* Compress files */
+	if( argc>4 && strcmp(argv[1],"-f")==0){
+		}
+	/* Uncompress a target file */
+	else if( argc>=3 && strcmp(argv[1],"-u")==0){
+			}
+	/* List the files int the target file. */
+	else if(argc==3 && strcmp(argv[1],"-l")==0){
+		int tarfd=open(argv[2],O_RDONLY);
+		if(tarfd==-1){
+			printf("open %s failed.\n",argv[2]);
+			exit(-1);
+		}
+		int fileNums=getFileNums(tarfd);
+		fileDes des;
+		int rNumbs;
+		
+                /* Read every file info  */
+		while(fileNums--){
+			rNumbs=read(tarfd,&des,sizeof(fileDes));
+			if(rNumbs!=sizeof(fileDes)){
+				printf("read %s failed.\n",argv[2]);
+				exit(-1);
+			}
+			printf("File:%s\tSize:%ld.\n",des.name,des.fileSize);
+			lseek(tarfd,des.fileSize,SEEK_CUR);
+		}
+		close(tarfd);
+	}
+	/* Display the Useage. */
+	else{
+		printf("Useage: %s -f files... -o target \n",argv[0]);
+		printf("Useage: %s -u file.rar\n",argv[0]);
+		printf("Useage: %s -l file.rar\n",argv[0]);
+		exit(-1);
+	}
+        return 0;
+}
+
+void compress(int argc,char* argv[])
+{
+	int tarfd=open(argv[argc-1],O_WRONLY|O_CREAT|O_EXCL,0600);
+	if(tarfd==-1){
+		perror("open():");
+		exit(-1);
+	}
+	struct stat st;
+	fileDes des;
+	int fd;
+	ssize_t rNumbs,wNumbs;
+	char tmp[1024];
+	int i;
+	
+	/* Compress every file */
+	for(i=2;i<argc-2;++i){
+		fd=open(argv[i],O_RDONLY);
+		if(fd==-1){
+			perror("open():");
+			exit(-1);
+		}
+		if(fstat(fd,&st)==-1){
+			perror("fstat():");
+			exit(-1);
+		}
+		setDes(&des,argv[i],(unsigned long)st.st_size);
+		
+		/*Fristly.write the file info struct fileDes*/
+		wNumbs=write(tarfd,&des,sizeof(fileDes));
+		if(wNumbs!=sizeof(fileDes)){
+			perror("write():");
+			exit(-1);
+		}
+		
+		/* Secondly. write the file content into the target */
+		while( (rNumbs=read(fd,&tmp,sizeof(tmp))) >0){
+			wNumbs=write(tarfd,&tmp,rNumbs);
+			if(rNumbs!=wNumbs){
+				perror("write():");
+				exit(-1);
+			}
+		}
+		close(fd);
+		printf("Compress %s OK.\n",argv[i]);
+	}
+		
+	/* In the end ,write the numbers of files into the tail of target */
+	int fileNums=argc-4;
+	write(tarfd,&fileNums,sizeof(int));
+	close(tarfd);		
+}
+
+void uncompress(int argc,char* argv[])
+{
+	int tarfd=open(argv[2],O_RDONLY);
+	if(tarfd==-1){
+		printf("open %s failed.\n",argv[2]);
+		exit(-1);
+	}
+	int fileNums=getFileNums(tarfd);
+	fileDes des;
+	int fd;
+	unsigned long sum;
+	char c;
+	ssize_t rNumbs,wNumbs;
+
+	/* Change into the target path */
+	char* path=".";
+	if(argc==4){
+		path=argv[3];
+	}
+	if(chdir(path)==-1){
+		printf("chdir(%s) failed.\n",path);
+		exit(-1);
+	}
+	
+	/* Uncompress every file.Keep the original name. */
+	while(fileNums--){
+		sum=0;
+		rNumbs=read(tarfd,&des,sizeof(fileDes));
+		if(rNumbs!=sizeof(fileDes)){
+			printf("11.read %s failed.\n",argv[2]);
+			exit(-1);
+		}
+		fd=open(des.name,O_WRONLY|O_CREAT,0600);
+		if(fd==-1){
+			printf("create file %s failed.\n",des.name);
+			exit(-1);
+		}
+		while(sum<des.fileSize){
+			rNumbs=read(tarfd,&c,sizeof(char));
+			if(rNumbs!=sizeof(char)){
+				printf("read %s failed.\n",argv[2]);
+				exit(-1);
+			}
+			sum+=rNumbs;
+			wNumbs=write(fd,&c,sizeof(char));
+			if(wNumbs!=sizeof(char)){
+				printf("write %s failed.\n",des.name);
+				exit(-1);
+			}
+		}
+		printf("Extract %s OK.\n",des.name);
+		close(fd);
+	}
+	close(tarfd);
+}

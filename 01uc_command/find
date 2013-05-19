@@ -1,0 +1,51 @@
+find 命令的-print和-print0选项的区别：
+
+winlin@localhost mypro$ find  test* 
+test
+test.c
+testcpp
+test.cpp
+winlin@localhost mypro$ find  test* -print
+test
+test.c
+testcpp
+test.cpp
+winlin@localhost mypro$ find  test* -print0
+testtest.ctestcpptest.cppwinlin@localhost mypro$ 
+可见默认的find输出是使用-print的，在各个结果都换行输出；
+使用-print0时就不会换行输出，man手册上说：
+-print0
+            True; print the full file name on the standard output, followed by a null character (instead of the newline
+            character that -print uses).  This allows file names that contain newlines or other types of white space to
+            be  correctly  interpreted  by  programs  that  process the find output.  This option corresponds to the -0
+            option of xargs.
+主要是为了使一些应用程序可以处理文件名中含有换行符的文件。
+
+如：
+find /tmp -name core -type f -print0 | xargs -0 /bin/rm -f
+
+     Find files named core in or below the directory /tmp and delete them, processing filenames in such a way that file
+     or  directory  names containing single or double quotes, spaces or newlines are correctly handled.  The -name test
+     comes before the -type test in order to avoid having to call stat(2) on every file.
+
+>>>>>
+fing命令中的文件类型：
+      -type c
+             File is of type c:
+
+             b      block (buffered) special   块文件
+
+             c      character (unbuffered) special 字符文件
+
+             d      directory   目录文件
+
+             p      named pipe (FIFO)   命名管道
+
+             f      regular file    普通文件
+
+             l      symbolic link; this is never true if the -L option or the -follow option is in  effect,  unless  the
+                    symbolic link is broken.  If you want to search for symbolic links when -L is in effect, use -xtype.
+
+             s      socket  socket文件
+
+             D      door (Solaris)

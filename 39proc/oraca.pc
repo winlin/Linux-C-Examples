@@ -1,0 +1,21 @@
+#include <stdio.h>
+int main()
+{
+	EXEC SQL INCLUDE oraca;
+	EXEC SQL INCLUDE sqlca;
+	EXEC ORACLE OPTION(ora=yes);
+	oraca.orastxtf=3;
+	
+	EXEC SQL BEGIN DECLARE SECTION;
+	char last_name[30];
+	char userpw[30]="openlab/open123";
+	EXEC SQL END DECLARE SECTION;
+	EXEC SQL CONNECT:userpw;
+	
+	EXEC SQL SELECT LAST_NAME INTO :last_name FROM S_EMP WHERE ID=1;
+	printf("last_name:%s\n",last_name);
+	printf("%s\n",oraca.orastxt.orastxtc);
+
+	EXEC SQL COMMIT WORK RELEASE;
+	return 0;
+}

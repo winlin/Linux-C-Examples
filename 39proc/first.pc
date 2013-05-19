@@ -1,0 +1,27 @@
+#include <stdio.h>
+int main()
+{
+	EXEC SQL INCLUDE SQLCA;
+	EXEC SQL BEGIN DECLARE SECTION;
+	char namepasswd[30]="openlab/open123";
+	char last_name[30]={0};
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL CONNECT:namepasswd;
+	if(sqlca.sqlcode!=0)
+		printf("Connect failed.\n");
+	else{
+		EXEC SQL select last_name into :last_name from s_emp where id=1;
+		if(sqlca.sqlcode==0)
+			printf("%s\n",last_name);
+		
+		EXEC SQL COMMIT WORK RELEASE;
+	}
+	return 0;
+}
+
+/*
+  proc first.cp
+  gcc first.c -lclntsh
+  a.out
+ */

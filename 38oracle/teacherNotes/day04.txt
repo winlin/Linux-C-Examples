@@ -1,0 +1,135 @@
+序列：
+    create sequence tests;
+
+    nextval
+    currval
+
+    select tests.nextval from dual;(-pow(10,26),pow(10,27))
+
+    insert into customer values(tests.nextval,'abc','123');
+
+   create sequence 序列名
+       increment by n ,步进 默认是1
+       start  with n,起始值  默认1
+       maxvalue n/nomaxvalue,默认nomaxvalue 实际是pow(10,27)
+       minvalue n/nominvalue,
+       nocycle/cycle,默认nocycle
+       cache n/nocache 默认20
+注：如果cycle的序列到最大值后 回到默认值1
+    create sequence  testss
+       increment by 10
+       start with 8
+       cache 200;
+   
+索引：index
+   从头找到尾  全表扫描
+   有目录-----index ----索引查找
+   每次查找的数据量  2%-4%
+   索引占空间 
+   如果你的表经常的变化 会造成索引很蜂窝
+   
+   B*树
+   rowid  18为的物理磁盘编号
+   oracle公司内部培训资料
+
+   主键  唯一约束 自动建立索引
+
+   create index  customer_index on customer(cno);
+   
+   set autotrace on----打开执行计划
+   select * from customer; 全表扫描
+   select * from customer  where id=1;
+   select * from customer  where cno='abc';
+
+   两个字段经常同时出现在where之后
+   create index  customer_index1 on customer(cno,cname);
+
+
+  视图,分页？  rowid 应用   
+  视图不占空间
+  视图限制数据库的访问
+  简化查询
+     select max(s),max(dept_id)from 
+         (select sum(salary) s,dept_id from s_emp 
+              group by dept_id)
+     select * from 
+         (select sum(salary) s,dept_id from s_emp 
+              group by dept_id) where s=
+	      (select max(ss) from (select sum(salary) ss from s_emp 
+                   group by dept_id)); 
+  保持数据的独立
+  同一个数据 不同的表现
+
+  create or replace view cview as
+      select id, last_name  from s_emp;
+  select * from cview; 
+  
+  简单的视图 和表的功能相同 可以在视图上增删改查
+  view有很多的限制 ----复杂的view
+  
+   分页？
+   为什么？  
+   select salary,last_name from s_emp order by salary;
+   rownum  ----伪列
+   select rownum,salary,last_name from s_emp;
+
+   select rownum,salary,last_name from s_emp where rownum<6;
+
+   如果我想按工资排序后 取前5条
+    select rownum,salary,last_name from s_emp where rownum<6
+        order by salary; //error
+   1先排序  
+    select salary,last_name from s_emp order by salary;
+   2.用rownum进行编号  where 条件过滤
+    select rownum,salary,last_name from (select salary,last_name 
+        from s_emp order by salary) where rownum<11;
+
+   取第6到第10条
+     select rownum,salary,last_name from (select salary,last_name 
+        from s_emp order by salary) 
+	    where rownum<11 and rownum >5;// no rows selected
+
+select * from (select rownum n,salary,last_name from (select salary,last_name 
+    from s_emp order by salary) 
+	where rownum<11) where  n>5; //这个比较好
+
+按某个字段排序 并且取中间的几条数据  必须三层嵌套
+select * from (select rownum n,salary,last_name from (select salary,last_name 
+    from s_emp order by salary)
+    ) where  n>5 and  n<11;
+
+有一张表 里面有重复的数据 
+有主键时  name
+id name age
+1  abc  23
+2  abc  24
+3  bcd  23
+4  bcd  23
+5  bcd  23
+把名字相同的只留一条
+
+id , rowid
+
+没有主键
+id  name age
+1  abc  23
+1  abc  24
+3  bcd  23
+2  bcd  23
+2  bcd  23
+2  bcd  23
+2  bcd  23
+
+把id 和name 相同的只留一条
+
+rowid
+
+
+@文件名
+plsql
+
+
+
+
+
+

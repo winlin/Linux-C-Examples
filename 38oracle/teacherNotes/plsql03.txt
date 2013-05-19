@@ -1,0 +1,433 @@
+游标 -------用于提取多行数据的结果集
+游标使用的步骤有4步
+1.声明游标
+  cursor  emp_cursor  is select * from s_emp; 
+2.打开游标
+  open  emp_cursor; 
+3.提取数据
+  fetch emp_cursor into 变量; --fetch 一次得到一条数据
+4.关闭游标
+  close emp_cursor;
+
+ declare
+     cursor  emp_cursor  is select * from s_emp;--声明游标
+     var_emp  s_emp%rowtype;
+ begin
+     open  emp_cursor;--打开游标
+     fetch emp_cursor into var_emp;--提取数据
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+     fetch emp_cursor into var_emp;
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+     close emp_cursor;--关闭游标
+ end;
+
+ declare
+     cursor  emp_cursor  is select * from s_emp;--声明游标
+     var_emp  s_emp%rowtype;
+     var_n  number;
+ begin
+     select count(*) into var_n from s_emp;
+     open  emp_cursor;--打开游标
+     for a in 1..var_n loop
+     fetch emp_cursor into var_emp;--提取数据
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+     end loop;
+     close emp_cursor;--关闭游标
+ end;
+
+for 循环中的游标自动打开 自动提取 自动关闭
+ declare
+     cursor  emp_cursor  is select * from s_emp;--声明游标
+     var_emp  s_emp%rowtype;
+ begin
+     for var in emp_cursor loop--var就是其中的一条数据
+         dbms_output.put_line(var.id||':'||var.salary);
+     end loop;
+ end;
+
+ 如果我们使用 loop  或者 while 
+ loop  循环把游标的数据 遍历出来
+ declare
+     cursor  emp_cursor  is select * from s_emp;--声明游标
+     var_emp  s_emp%rowtype;
+ begin
+     open  emp_cursor;--打开游标
+     loop
+         fetch emp_cursor into var_emp;--提取数据
+	 exit when  emp_cursor%notfound;--当发现不了数据就退出
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+     end loop;
+     close emp_cursor;
+ end;
+
+ 改成 while 循环
+ declare
+     cursor  emp_cursor  is select * from s_emp;--声明游标
+     var_emp  s_emp%rowtype;
+ begin
+     open  emp_cursor;--打开游标
+     fetch emp_cursor into var_emp;--提取数据
+     while emp_cursor%found loop
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+         fetch emp_cursor into var_emp;--提取数据       
+     end loop;
+     close emp_cursor;
+ end;
+
+游标的属性 
+          notfound   found    isopen   rowcount
+未打开    ora01001   ora01001  false   ora01001
+打开      null       null      true    0
+fetch     false      true      true    1
+fetch     false      true      true    2
+fetch     true       fasle     true    2
+close     ora01001   ora01001  false   ora01001
+
+注意：关闭的游标 不能再关闭 打开的游标不能再打开
+      exit  when  表达式;
+      等价于
+      if  表达式  then
+      exit;
+      end if;
+ 
+----------
+select * from s_emp for update;--在查询时锁定这张表
+
+fetch  cursorname  into 单个变量，单个变量;
+fetch  cursorname  into record 变量;
+fetch  cursorname  into record.id ,record.name;
+
+-------------------带参游标---------------
+declare
+     cursor  emp_cursor(cpar  number)  is select * 
+         from s_emp where id>cpar;--声明游标
+     var_emp  s_emp%rowtype;
+ begin
+     open  emp_cursor(10);--打开游标
+     fetch emp_cursor into var_emp;--提取数据
+     while emp_cursor%found loop
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+         fetch emp_cursor into var_emp;--提取数据       
+     end loop;
+     close emp_cursor;
+ end;
+
+注意：参数类型不能指明长度
+
+------------------------------------------
+declare 
+var_n number;
+begin
+select id  into var_n from s_emp where id>5;
+exception
+    when TOO_MANY_ROWS then
+    dbms_output.put_line('TOO_MANY_ROWS');
+    --比较合理的处理是 向日志表中插入一条日志说明异常的发生
+    --以备以后错误的处理
+
+end;
+
+ declare
+     cursor  emp_cursor(cpar  number)  is select * 
+         from s_emp where id>cpar;--声明游标
+     var_emp  s_emp%rowtype;
+ begin
+     open  emp_cursor(10);--打开游标
+     fetch emp_cursor into var_emp;--提取数据
+     while emp_cursor%found loop
+         dbms_output.put_line(var_emp.id||':'||var_emp.salary);
+         fetch emp_cursor into var_emp;--提取数据       
+     end loop;
+     close emp_cursor;
+     close emp_cursor;
+ exception
+     when  invalid_cursor  then
+     dbms_output.put_line('invalid_cursor');
+     when  to_many_rows  then
+     dbms_output.put_line('invalid_cursor');
+ end;
+系统自定义异常  会根据sql语句的执行情况 自动抛出
+---------------------------------------------
+自定义异常
+declare
+    to_many_emps  exception;
+    v_emp  s_emp%rowtype;
+    v_n   number;
+ begin
+    select count(*) into v_n  from s_emp;
+    -- 想抛出自己的异常  sql语句就不应该抛出系统异常  
+    if  v_n>1 then
+    raise  to_many_emps;
+    end if;
+    select * into v_emp from s_emp; --上面的语句抛出了自定义的异常
+    --这句sql就没有机会执行 
+ exception
+    when  to_many_emps then
+        dbms_output.put_line('my exception to_many_emps');
+    when  TOO_MANY_ROWS  then
+        dbms_output.put_line('to_many_rows');
+ end;
+
+declare
+    to_many_emps  exception;
+    v_emp  s_emp%rowtype;
+    v_n   number;
+    pragma  exception_init(to_many_emps,-1001);
+    --和一个异常的编号 绑定 
+ begin
+    select count(*) into v_n  from s_emp;
+    -- 想抛出自己的异常  sql语句就不应该抛出系统异常  
+    if  v_n>1 then
+    raise  to_many_emps;
+    end if;
+    select * into v_emp from s_emp; --上面的语句抛出了自定义的异常
+    --这句sql就没有机会执行 
+
+ end;
+如果你想捕获所有的异常  用others  
+others 应该出现在异常处理的最后
+declare
+    to_many_emps  exception;
+    v_emp  s_emp%rowtype;
+    v_n   number;
+    pragma  exception_init(to_many_emps,-1001);
+    --和一个异常的编号 绑定 
+ begin
+    select count(*) into v_n  from s_emp;
+    -- 想抛出自己的异常  sql语句就不应该抛出系统异常  
+    if  v_n>1 then
+    raise  to_many_emps;
+    end if;
+    select * into v_emp from s_emp; --上面的语句抛出了自定义的异常
+    --这句sql就没有机会执行 
+ exception
+    when to_many_emps   then
+    dbms_output.put_line('my excepiton to_many_emps'); 
+    when others   then
+    dbms_output.put_line('others');
+ end;
+plsq的异常处理 1 要声明异常  2 根据业务的不同情况抛出异常
+3 在异常块中捕获异常 注意捕获异常的顺序 others在最后
+
+--------------------------------------------------
+plsql中最重要的  过程 和函数
+plsql块都是没有名字的  
+把完成某项功能的代码起一个名字 放入数据库中
+
+create or replace procedure  hello100
+is
+begin
+    for a in 1.. 100 loop
+       dbms_output.put_line('hello world');
+    end loop;
+end;
+
+exec hello100;  --调用hello100这个过程
+call hello100();
+存储过程的参数
+create or replace procedure  hello100(var_p  varchar2)
+is
+begin
+    for a in 1.. 100 loop
+       dbms_output.put_line(var_p);
+    end loop;
+end;
+写一个有名字的过程 带两个参数 name  age  向
+student(id,name,age)表中插入1条记录
+--问题关键在于拼接sql
+create sequence  test_s_s;
+create or replace procedure 
+    addstudent(var_name varchar2,var_age number)
+is
+begin
+    insert into student 
+        values(test_s_s.nextval,var_name,var_age);
+    commit;
+end;
+如果执行时 发现sql是一个字符串变量  那这样的sql属于动态sql
+create or replace procedure 
+    addstudent(var_name varchar2,var_age number)
+is
+   sqlstr varchar2(100);
+begin
+   sqlstr:='insert into student 
+        values(test_s_s.nextval,'''||var_name||''','||var_age||')';
+   dbms_output.put_line(sqlstr);
+   execute  immediate  sqlstr;
+   commit;
+end;
+
+ddl的执行 和这个完全相同
+建31张表  只有名字不同  而结构完全相同
+day1 .. day31
+begin
+   execute  immediate 'create table day1 
+       (id  number primary key,salary  number)';
+end;
+
+作业：
+写一个存储过程 建立31张结构相同  表名不同的表
+
+在写一个存储过程 删除这31张表
+------------------------------------------------
+存储过程的参数
+ 
+create or replace procedure 
+    addstudent(var_name varchar2,var_age number)
+is
+begin
+    insert into student 
+        values(test_s_s.nextval,var_name,var_age);
+    commit;
+end;
+
+参数的默认类型 是 in -----------负责输入的参数  
+                  out-----------负责输出的参数  带回返回值
+		  in out -------即负责输入又负责输出
+void add(int *age){
+ *age=100;
+}
+
+int age=0;
+add(&age);
+age-----------100
+这个存储过程是得到s_emp表中记录数
+create or replace procedure 
+    getstudentcount(var_c in out number)
+is
+begin
+    select count(*) into var_c  from s_emp; 
+end;
+这样 参数的类型如果是out类型的 那就无法在命令行中调用
+只能在别的存储过程 或者匿名块中调用
+declare
+    var_n  number; --就是为调用得到人数的存储过程准备的变量
+begin
+    getstudentcount(var_n);
+    dbms_output.put_line(var_n);
+end; 
+有 out 类型或者in out类型的参数必须是变量   
+查看存储过程的命令是desc 
+
+总结：
+     in 
+     out 
+     in out   只要有out类型的参数必须是变量
+-------------------------------------------------------------
+desc  过程名
+过程名(按参数排放值);-----顺序赋值 位置赋值
+过程名(名字赋值);-----名字赋值不能出现在位置赋值左边
+                 -----混用第一个位置必须是位置赋值
+create or replace procedure 
+    addstudent(var_name varchar2,var_age number)
+is
+begin
+    insert into student 
+        values(test_s_s.nextval,var_name,var_age);
+    commit;
+end;
+
+begin
+    addstudent(var_name=>'hello',var_age=>23);
+end;
+call 用名字赋值时有问题
+
+--------------------------------------------------
+函数  ----过程
+
+这个存储过程是得到s_emp表中记录数
+create or replace function 
+    getstudentcountfun
+    return  number
+is
+   var_c  number;
+begin
+    select count(*) into var_c  from s_emp;
+    return var_c; 
+end;
+
+declare
+   var_n number;
+   var_p number;
+begin
+   var_n:=getstudentcountfun(var_p);
+   dbms_output.put_line(var_n||':'||var_p);
+end;
+写函数数时如果出现警告信息  可以通过show errors查看
+作业：
+   写一个过程  得到s_emp 中部门的个数
+   写一个函数  得到s_emp 中部门的个数
+
+----------------------------------------------
+包的概念
+    dbms_output.put_line('');----输出包
+    dbms_job -----定时任务调度包
+    dbms_random----生成随机数包
+     
+    写一个包的简单的例子 包头如下：
+    create or replace package  pack_test is
+        procedure  addstudent(age number);
+	function   getempcount return number;
+    end;
+    包体的实现
+    create or replace package body pack_test is
+        procedure  addstudent(age number) 
+	    is --过程的实现
+	    begin
+	    dbms_output.put_line('addstudent');
+	    end;
+	function   getempcount return number
+	    is --函数的实现
+	    var_c  number;
+	    begin
+            var_c:=100;
+	    return var_c;
+	    end;
+    end;
+  select pack_test.getempcount from dual;--用dual测试包中的函数
+作业:写一个包 里面有一个函数 一个过程  过程和函数如上一个作业中
+     得到员工数的要求相同 
+     再写一个匿名块测试所写的函数和过程
+ -----------------------------------------------------
+触发器
+    在主表 和子表的主外键关系
+    on delete cascade
+    on delete set null
+
+    如果更新主表中的数据 id=100  id=101
+    1.更好的维护数据的完整性
+    2.执行审计跟踪 
+    3.为其他的程序发送一个触发信号
+
+    create or replace trigger s_student_t   
+         after insert   on student
+	 declare
+	 begin
+	 dbms_output.put_line('trigger call success');
+	 end;
+
+    insert into student values(1,'aa',21);
+    before  不管成功不成功 都会触发
+    after  必须是成功执行之后 触发
+    当然 delete语句即使没有删除到数据 也算成功执行 执行执行的结果为0行
+    create or replace trigger s_emp_t   
+         after update   on s_emp for each row
+	 declare
+	 begin
+	 dbms_output.put_line('trigger call success');
+	 end;
+
+    create or replace trigger s_emp_t   
+         after update   on s_emp 
+	 declare
+	 begin
+	 dbms_output.put_line('trigger call success');
+	 end;
+
+    你做dml时肯定会提交  或者回滚 ，
+    如果触发器中出现了事务语句 就有可能不能完成事务
+    的特性。
+  
+    for each row 就是语句影响了多少次 就触发多少次
+
+    没有就是无论影响多少次触发器只触发一次

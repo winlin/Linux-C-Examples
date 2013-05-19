@@ -1,0 +1,26 @@
+序列容器: vector,deque,list
+
+list.sort(greater<int>());
+list.sort(less<int>());
+greater和less是两个泛型的函数对像。
+
+使用list的时候注意,当使用自定义类型的时候：
+list.remove()需要存放的对象定义了operator==()
+list.unique()同样也需要operator==()
+list.sort()需要operator<()
+
+关联式容器共性
+set<K>,multiset<K>,map<K,V>,multimap<K,V>
+find(key)
+
+map
+一个元素中含有两个成员：key和value.
+
+stack
+stack的底层实现是deque；而deque又是由数组实现的。
+stack的底层实现是可选择的：
+stack<int,vector<int> > svt;
+stack<int,list<int> > slt;
+
+queue的默认底层实现是deque(双端队列)，同样可以改变其底层实现的容器。
+

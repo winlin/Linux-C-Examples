@@ -1,0 +1,44 @@
+全屏幕编程
+需要使用curses库
+查看关于ncurses库的所有函数：
+	man ncurses
+
+addch   addstr  addnstr  printw    添加前缀：mv~  w~ mvw~
+getch  getstr getnstr scanw        添加前缀：mv~  w~ mvw~
+
+支持创建新窗口
+支持鼠标操作:  getmouse()等
+NAME
+       has_mouse, getmouse, ungetmouse, mousemask, wenclose, mouse_trafo, wmouse_trafo, mouseinterval - mouse
+       interface through curses
+mousemask()设置关心那个事件
+
+开启键盘读取功能键keypad()
+keypad键区
+curs_inopts(3X)                                                curs_inopts(3X)
+
+NAME
+       cbreak, nocbreak, echo, noecho, halfdelay, intrflush, keypad, meta, nodelay,
+       notimeout, raw, noraw, noqiflush, qiflush, timeout, wtimeout, typeahead - curses
+       input options
+
+SYNOPSIS
+       #include <curses.h>
+
+       int cbreak(void);
+       int nocbreak(void);
+       int echo(void);
+       int noecho(void);
+       int halfdelay(int tenths);
+       int intrflush(WINDOW *win, bool bf);
+       int keypad(WINDOW *win, bool bf);
+       int meta(WINDOW *win, bool bf);
+       int nodelay(WINDOW *win, bool bf);
+       int raw(void);
+       int noraw(void);
+       void noqiflush(void);
+       void qiflush(void);
+       int notimeout(WINDOW *win, bool bf);
+       void timeout(int delay);   //指定允许延迟多长时间读取键盘输入getch()
+       void wtimeout(WINDOW *win, int delay);
+       int typeahead(int fd);

@@ -1,0 +1,157 @@
+dms 分为客户端  和 服务端
+
+客户端设计为两个部分 
+    公用的数据 结构  logrec  logmatchedrec  在data.h中定义
+    
+    读取部分 －－－－得到发送的记录集合 
+    写读取部分的头文件  logreader.h
+    写读取部分的实现    logreader.cpp
+    :%s /旧串/新串 
+    :%s /void/void logreader::  ---构造函数自己加 
+    :%s /;/{cout<<""<<endl;} ---注意namespace 后的 
+         
+     逐个函数的实现 :
+     a.backup 函数的实现
+      1.写备份文件的脚本  backup.sh
+     2.chmod  777 backup.sh
+      3.测试备份脚本 
+      
+      写一个异常的头文件   做自己的一个异常  
+      根据不同的情况  制造不同的异常   抛出 
+      在readlog中可以直接 抛出 
+      在main中 进行得到异常信息  并记录异常日志 
+
+      b.readlogins
+          一次读出 一个结构体的数据 
+
+
+      c. readbacklogfile
+          一次读一个有效字段  无效数据跳过  username 以点开头你舍弃掉就可以  注意字节序的问题 
+          .openlab
+             
+
+      d. matches
+           1.用登出的集合 循环的拿出一条  
+           2.去登录的集合中 查找 (username pid ip 相同)
+            abc   10086   192.168.0.98   10   7 
+            abc   10086   192.168.0.98   1200 8
+            abc   10086   192.168.0.98   2000 7
+            abc   10086   192.168.0.98   3599 8 ----3589
+ 
+      e. savelogins
+           每一次 按一个结构体 大小 保存到文件中 
+  
+    发送部分 －－－－发送记录到服务端
+    发送类  logsender 
+    private:
+    fd ----网络文件描述符
+    port---程序端口
+    serverip ---服务器ip
+    sendfail ---保存发送失败的数据
+    public:   
+     sendmachedlogs(list<logmatchedrec> matches); -----发送匹配好的数据 
+      
+    private:
+      initnetwork();---初始化网络 
+      readfail_m_rec(list<logmatchedrec> matches);---读取上次发送失败的数据
+      savefail_m_rec(list<logmatchedrec> matches);---保存本次发送失败的数据 
+      
+      
+任务的定时 执行 ：
+     cd
+     crontab -e  这个命令要在主目录下敲
+      1.先写test.sh
+      2.改权限 
+     3.crontab -e
+      * * * * * ./a.out
+       1*  分钟    0－59
+       2*  小时    0－23
+       3*  几号    1－31
+       4*  月      1－12
+       5*  星期几  0－6
+      1 * * * 0  ./test.sh    
+      1－15 ＊ ＊ ＊ ＊ ./test.sh
+      0,30 * 1-15 1,3,5,7,9,11 1－5 ./test.sh  
+       每个小时的整点 或者半点 一个月的前半个月 这个月是奇数月 的工作日执行test.sh
+       ,代表选择   －代表区间
+
+
+   
+ 
+      
+服务端
+
+     可以写一个最简单的socket服务器  能循环接受客户端的数据 
+     
+
+如果程序放到服务器上执行  -lnsl  -lsocket 
+
+
+
+整合系统：
+    logdata  ---username  logintime logouttime  durations 
+
+10 
+   select sum(durations) ,max(username) from logdetails 
+    where  时间区间  group by username;
+
+第一个要解决的问题：
+     数据量是海量级数据  数据库的优化达到极限   
+      
+     改变数据的分布 －－－－－－  31 
+
+把查询的时间 分布开 
+    plsql  
+     1号  
+       
+      
+     2号 
+     把1号的数据  －－－－天表(day1)    ----------一天对应一条记录 ------update 月表
+
+
+     就把统计时间  分散到了平时 
+
+
+     如果想交费  直接查询 月表  －－－－
+
+     
+
+
+   
+     
+   
+       
+     
+           
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

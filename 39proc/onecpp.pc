@@ -1,0 +1,29 @@
+#include <cstdio>
+#include <iostream>
+using namespace std;
+int main()
+{
+	EXEC SQL INCLUDE SQLCA;
+	EXEC SQL BEGIN DECLARE SECTION;
+	char namepasswd[30]="openlab/open123";
+	char last_name[30]={0};
+	EXEC SQL END DECLARE SECTION;
+	
+	EXEC SQL CONNECT:namepasswd;
+	if(sqlca.sqlcode!=0)
+		cout<<"Connect failed."<<endl;
+	else{
+		EXEC SQL select last_name into :last_name from s_emp where id=1;
+		if(sqlca.sqlcode==0)
+			cout<<last_name<<endl;
+		
+		EXEC SQL COMMIT WORK RELEASE;
+	}
+	return 0;
+}
+
+/*
+  proc onecpp.pc oname=onecpp.cpp code=cpp parse=none
+  g++ onecpp.cpp -lclntsh
+  a.out
+ */

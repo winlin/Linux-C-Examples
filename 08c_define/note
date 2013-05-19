@@ -1,0 +1,102 @@
+一、预处理,宏定义
+
+#include
+#define
+
+宏函数
+#define PI 3.1415926
+
+宏函数的弊端：
+宏函数会导致编译后代码量变大；
+宏函数没有类型检查；
+无法用一个指针指向宏；
+宏可能会不止一次的计算它的参数；
+    n=MAX(++x,j);
+
+#运算符
+只能出现在宏函数中，其作用是将参数字符串化；
+#define PRNT(x) printf(#x"=%d\n",x)
+这样如果输入的变量为y=10那么打印的形式为：y=10
+如果宏
+
+##运算符
+将两个记号连接在一起
+
+#define ID(n)   i##n
+#define GEN_FUN(type)  \
+type type##_max(type x,type y)  { return x>y?x:y ; } 
+
+GEN_FUN(int);
+GEN_FUN(double);
+
+int main()
+{
+  int ID(1),ID(2),ID(3),ID(a);
+  i1=20;
+  i2=30;
+  i3=40;
+  ia=50;
+
+  printf("%d\n",int_max(65,23);
+  printf("%lf\n",double_max(65.23,45.46);
+
+  return 0;
+}
+
+预处理的宏
+__LINE__  代表__LINE__所在的当前行  int
+__TIME__ 代表当前文件名  string
+__FILE__  编译源文件的文件名 string
+__DATE__ 代表当前的日期 string
+__STDC__ 是一个逻辑值，如果为1则编译器支持标准的C
+
+打桩：使用printf来查看某个变量的值
+
+条件编译：#define  #if  #endif  #ifndef #elif #else #ifdef
+                    #undef取消该宏定义
+可以使用宏定义来使某些语句可以执行，和不执行
+#define DEBUG 1
+
+int main()
+{
+  int a=23;
+  int b=33;
+
+  #if DEBUG
+  printf("%d",a/b);
+  #endif
+  
+  return 0;
+  
+}
+条件编译的实现是通过预处理器，在预处理阶段决定是否使某一块代码交给编译器
+去编译。可以使用gcc -E 来查看预处理完毕的程序。
+
+#define IA32 1
+//...
+#ifdef IA32
+       printf("IA32\n");
+#elif defined(IA64)
+       printf("IA64\n");
+#elif defined(AMD)
+       printf("AMD\n");
+#endif
+可以把这些选择性的语句可以放到一个统一的头文件里面。
+
+我们可以只定义一个宏名，但是不给他赋值，如：
+#define ABC 
+给其赋值，可以变得更完整
+
+
+调用其他程序员提供的功能函数必须要声明！
+由于C语言里面存在隐式声明，所以，如果我们在使用其他程序员提供的函数时，
+没有声明，就会导致奇怪的错误.
+为了避免繁琐的函数声明,我们可以把所有相似功能的函数放在一个文件中进行统一声明,这个文件就是头文件.
+
+
+extern全局变量
+我们可以在一个文件中定义一个全局变量，然后在main函数所在源文件中进行全局变量声明:
+extern   int Max=110;
+推荐把全局变量在一个头文件中，引用时只需要包含即可。
+
+makefile的简单编写

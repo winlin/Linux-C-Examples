@@ -1,0 +1,202 @@
+================================================================================
+端口举例:
+	80     http
+	1521   oracle
+	3306   mysql
+	1433   sqlserver
+================================================================================
+
+1.什么是Pro*C/C++
+	在C/C++中嵌入SQL语句而开发出的应用程序称为 Pro*C/C++ .
+
+2.编译过程
+	proc first.pc
+	gcc first.c -lclntsh
+	./a.out
+
+3.SQLCA
+ /*
+  注意 SQLCA 是Oracle的通信区
+  sqlca.sqlcode  --- sql语句的执行状态 0 是成功;-1 是失败。
+  sqlca.sqlerrm.sqlerrmc --- 错误信息
+  sqlca.sqlerrd[2]    ---最近一条sql影响的行数
+  注意上面的字母在代码里要小写！
+ */
+ 
+4. 宿主变量
+   C/C++使用的变量叫 C变量 C++的变量
+   sql 语句中的变量叫 sql变量
+   既能在C/C++中使用，又能在sql语句中使用的变量，称之为 宿主变量
+   
+   C中的宿主变量和C变量定义相同 ，只是在SQL语句中使用时添加 ':'
+   C++中宿主变量，使用时也要添加 ':' 定义必须在申明区
+   
+   申明区的语法：
+	EXEC SQL BEGIN DECLARE SECTION;
+	     宿主变量的定义
+	EXEC SQL END DECLARE SECTION;
+
+5.  proc指令默认生成文件的后缀是 .c ;可以使用 oname=target file .
+    code=cpp  parse=none
+    proc中的选项：
+	iname  输入的文件名 默认是.pc
+	oname  输出的文件名 默认是.c
+	code   默认的是ansi_c  ，c++使用cpp
+	parse  默认c的是full  ，c++是none和partia，最好用none
+	mode   默认是oracle ，c++ 推荐使用ansi
+	userid 用户名/密码 去检测存储过程是否合法    
+
+
+    改成C++程序：
+	1.把所有的宿主变量，放在声明区
+	2.预处理时添加指定选项 proc filename.pc oname=target.cpp code=cpp parse=none
+	3.g++ target.cpp -lclntsh
+	4.a.out
+
+6.指示变量
+	处理 NULL 数据的另一种方式
+	主要用于输出，即当宿主变量用于接收数据库的返回数据时。
+	通过在宿主变量后使用指示变量，根据指示变量的不同值，来确定返回的数据是否为NULL。
+    	  若为空值  指示变量为 -1
+  	  获得的是原值  指示变量为 0
+   	  数据被截断 指示变量 >0 返回该数据的长度
+    注意：指示变量的类型必须是 short
+
+7.数组变量
+	除字符串外，只支持到一维数组，最大到 32767
+
+8.oraca
+	如果sqlca的信息还满足不了你的需求，你可以使用 oraca。但是oraca比较占用资源，默认关闭；
+	我们常用的也就是查看 SQL语句执行的结果文本。
+	如果想要使用oraca，那么就要显式的加载oraca结构到Pro*C程序中。可通过语句：
+		EXEC SQL INCLUDE oraca;
+		EXEC ORACLE OPTION(ORACA=YES);
+
+	1.引入 oraca
+	      EXEC SQL INCLUDE oraca;
+	2.使之生效
+	      EXEC ORACLE OPTION(ORACA=YES);
+        3.设置一个字段
+	      oraca.orastxtf=3;
+	      oraca.orastxt.orastxtc[70];
+
+================================================================================
+9.PL/SQL 的嵌入语法        
+	 
+	 1.建立一个函数，一个存储过程 以备调用
+	 	create or replace procedure get_depts_pro(count_v out number) is
+		       begin
+				select count(*) into count_v from (select dept_id from s_emp group by dept_id having dept_id is not null);
+		       end;
+
+		create or replace function get_depts_fun return number
+		is
+		count_v number;
+		begin
+			select count(*) into count_v from (select dept_id from s_emp group by dept_id having dept_id is not null);	
+			return count_v;
+		end; 
+	 
+	 2.调用plsql需要在这个格式下调用
+		EXEC SQL EXECUTE
+		     BEGIN 
+		     	   在这里调用，注意函数调用使 := 赋值
+		     END;
+		END-EXEC;
+	 3.编译的时候
+		proc fun_proc.pc userid="openlab/open123" sqlcheck=semantics
+		gcc fun_proc.c -lclntsh
+		a.out
+			
+================================================================================
+10.多个数据库的连接
+	Oracle 的连接
+	       echo $ORACLE SID  ---oracle的实例名
+	       echo $ORACLE_HOME   ---oracle安装目录
+        同一个数据库，多个帐户
+	EXEC SQL CONNECT:user1 at db1;
+	EXEC SQL CONNECT:user2 at db2;
+
+
+如何链接远程的数据库？
+	借助一个文件
+	cd $ORACLE_HOME/network/admin 下：
+	   tnsnames.ora 这个文件中的一个描述符，负责远程连接。
+
+     1.telnet 到一个服务器，这个服务器上必须装有Oracle数据库
+       
+
+     2.不使用本地数据库，直接链接到远程数据库
+     EXEC SQL BEGIN DECLARE SECTION;
+     char db26[20]="db26tarena";
+     char last_name[30];
+     EXEC SQL END DECLARE SECTION;	
+
+     EXEC SQL CONNECT:userpwd at:db26 using 'CHA_192.168.0.26';
+     EXEC SQL at:db26 SELECT  LAST_NAME INTO :last_name FROM S_EMP WHERE ID=2;
+     EXEC SQL at:db26 COMMIT WORK RELEASE;
+     
+
+     注意：用 at 区分连接，用 using 来连接远程数据库
+
+
+================================================================================
+11.proc中的异常处理
+	
+	EXEC SQL WHENEVER {SQLERROR,NOT FOUND,SQLWARNING} {DO,CONTINUE,BREAK,GOTO,STOP} {processErrorFunction(),标签} ;
+	
+	注意： whenever 一般出现在第一句，如果有多个则向上找，最近一条有效。
+	处理错误的步骤:
+		1.用WHENEVER检查语句错误
+		2.用SQLCA描述错误
+		3.ROLLBACK所有操作，RELEASE 资源
+
+
+	
+
+================================================================================
+12.可以把多个数据放到一个结构体里面，然后使用select时，直接放到结构体变量里面。
+	注意：不可以使用嵌套结构体和联合
+
+================================================================================
+13.  proc中的游标
+
+     1.声明游标
+	EXEC SQL DECLARE 游标名 CURSOR FOR SELECT语句;   (注意和PL/SQL里面的语法不同)
+     2.打开游标
+	EXEC SQL OPEN 游标名
+     3.提取数据
+	EXEC SQL FETCH 游标名 INTO 变量
+     4.关闭游标
+	EXEC SQL CLOSE 游标名
+
+	
+     for(i=0;i<sqlca.sqlerrd[2];++i){
+        EXEC SQL FETCH sem_cursor into :sem_rec;
+       }
+
+随机访问游标：       
+		     滚动游标，提取任意一条语句；
+       EXEC SQL FETCH [FIRST,PRIOR,NEXT,CURRENT,RELATIVE n,LAST,RELATIVE,ABSOLUTE n] emp_cursor into :emp_rec;
+
+
+动态SQL：
+      PLSQL 中 建表 还有当sql是一个字符串时，使用动态SQL。
+      在Proc中，就可已直接建表了；但是对于字符串，还要使用动态SQL
+       
+      第二种形式的动态SQL：
+	为了提高效率，加入了预编译
+	
+     第三种形式  为了解决select的动态性
+     
+     占位符：
+     int id;
+     char sqlstr[100]="select id,last_name,salary from test_student where id=:abc";
+     EXEC SQL PERPARE s from :sqlstr;  --预编译
+     EXEC SQL DECLARE stu_cur cursor for s;  --创建游标
+     EXEC SQL OPEN stu_cur USING :id;	     
+     
+     EXEC SQL FETCH stu_cur into :d,:name,:age;
+     EXEC SQL CLOSE stu_cur;
+
+     其中，的:abc就是占位符。

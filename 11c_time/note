@@ -1,0 +1,106 @@
+>>>>>>>>>>>>
+/*C语言的本质是对内存进行操作
+ 对于一片内存你可以存放任何类型的数据，为了存放不同的数据类型
+往往需要不同类型的指针，但是我们完全可以做到在int变量里面存放一个字符串*/
+#include <stdio.h>
+#include <string.h>
+
+int main(  )
+        {
+                int x;
+                x="abc";
+                printf( "x=%d\n",x );
+                printf( "x=%p\n",x );
+                printf( "abc=%p\n","abc" );
+
+                char *p=&x;
+                strcpy( p,"abc" );
+                printf( "x=%#X\n",x );
+
+                return 0;
+                
+        }
+
+>>>>>>>>>>>>
+对于realloc使用的时候，我们可以使用原来的指针来存储realloc的返回值。
+
+>>>>>>>>>>>>
+标准库简介
+assert.h   定义一些断言函数。断言错误会直接导致程序终止。
+
+float.h   定义了一些常量:                
+printf( "%f\n",FLT_MAX );
+printf( "%lf\n",DBL_MAX );
+printf( "%llf\n",LDBL_MAX );
+
+errno.h
+
+signal.h
+ void (*bsd_signal(int, void (*)(int)))(int);
+
+setjmp.h
+
+stdarg.h  处理可变长参数
+类型va_list：用于包存参数的数组
+宏函数va_start 可以把参数送到va_list里面
+            va_arg    依次从va_list获得一个参数
+            va_end    结束取参数
+stdlib.h 功能函数
+#include <stdlib.h>
+int main()
+{ 
+    char* str=getenv("PATH");
+    printf("%s\n",str);
+    system("ls -l");
+    return 0;
+}
+
+time.h
+三种时间类型
+clock_t 按时钟度量的时间，使用的是CPU的晶振频率，很准确
+time_t  日历时间，从yyyy-mm-dd开始到现在经过的秒
+struct tm 时间分解成秒、分、时等
+要注意tm中不同成员的的范围：
+              int    tm_sec   Seconds [0,60].  含有闰秒
+              int    tm_min   Minutes [0,59].   
+              int    tm_hour  Hour [0,23].
+              int    tm_mday  Day of month [1,31].
+              int    tm_mon   Month of year [0,11]. 注意算月的时候要加1
+              int    tm_year  Years since 1900.
+              int    tm_wday  Day of week [0,6] (Sunday =0).
+              int    tm_yday  Day of year [0,365].
+              int    tm_isdst Daylight Savings flag.
+              daylight saving time夏令时，在五一时夏令时比北京非夏令时要晚一个小时
+              在十一的时候夏令时要前调1个小时
+
+时间处理函数
+clock_t clock(void) 返回处理器时间 ，除以CLOCKS_PER_SEC
+
+时间类型转换函数
+              struct tm *getdate(const char *);
+              struct tm *gmtime(const time_t *);
+              struct tm *gmtime_r(const time_t *restrict, struct tm *restrict);
+              struct tm *localtime(const time_t *);
+              struct tm *localtime_r(const time_t *restrict, struct tm *restrict);
+              time_t     mktime(struct tm *);
+              mktime()可以修改你传入的错误的日期 ，可以帮我们计算日期
+比如我们想知道在2001-3-20后200以后的日期，我们可以定义一个struct tm 存放2001-3-20然后，
+让tm_mday+200,再调用mktime(tm)就可以自动算出下一个日期
+闰秒：[0,60]有些天文计算需要用到60秒的度量，称为闰秒
+
+>>>>>>>>>>>>>
+register 寄存器变量  register int x=100;
+register只是一种请求，最后需要编译器决定是否处理。如果变量放入寄存器，则它的存取效率就会很高；
+注意，寄存器变量不可以取地址
+
+volatile变量，易变变量。每一次访问该变量，我们就要去重新获取该变量。
+volatile int x=100;
+   
+restrict 
+restrict可以对指针变量的访问进行优化，必须在指针作为函数的参数时使用
+void f(int* restrict p) {}
+在使用restrict时，会对指针的简介寻址进行优化。
+
+#inclucde <string.h>
+memset()
+memcopy()

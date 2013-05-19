@@ -1,0 +1,39 @@
+#include <stdio.h>
+
+//要在错误处理函数前面声明
+EXEC SQL INCLUDE sqlca; 
+void sqlerrorp();
+void sqlnotfoundp();
+
+int main()
+{
+	EXEC SQL BEGIN DECLARE SECTION;
+	char userpwd[30]="openlab/open123";
+	char last_name[30]={0};
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL WHENEVER SQLERROR DO sqlerrorp();
+	EXEC SQL WHENEVER NOTFOUND DO sqlnotfoundp();
+	EXEC SQL CONNECT:userpwd;
+
+	EXEC SQL SELECT LAST_NAME INTO:last_name FROM S_EMP WHERE ID=100;
+	EXEC SQL COMMIT WORK RELEASE;
+
+	return 0;
+}
+
+void sqlerrorp()
+{
+	EXEC SQL WHENEVER SQLERROR CONTINUE;
+	printf("%s\n",sqlca.sqlerrm.sqlerrmc);
+	//因为是查询，所以不用回滚
+	//EXEC SQL ROLLBACK;
+	EXEC SQL COMMIT RELEASE;
+
+       //exit(-1);
+}
+
+void sqlnotfoundp()
+{
+	printf("%s\n",sqlca.sqlerrm.sqlerrmc);
+}

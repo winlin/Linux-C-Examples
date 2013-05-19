@@ -1,0 +1,303 @@
+1.访问数据库的技术
+  plsql     ----数据库内部访问技术
+  proc/c++  ----针对c C++
+  odbc      ----mic
+  oci       ----oracle底层的通信接口
+
+  begin
+      dbms_output.put_line('hello world');
+  end;
+
+  set serveroutput on -----打开输出
+
+  declare
+     申明部分
+  begin
+     执行部分
+  exeception
+     异常处理
+  end;
+  赋值 ---  :=
+  比较 ---  =
+ -----------------------------------------------
+ 变量的申明
+
+ declare
+     v_id   number;
+     v_name varchar2(30);
+ begin
+     v_id:=10;
+     select last_name into v_name from s_emp 
+         where id=v_id;
+     dbms_output.put_line(v_name);
+ end;
+  
+ 
+ DECLARE
+     v_id   number;
+     v_name varchar2(30);
+ BEGIN
+     v_id:=10;
+     select last_name into v_name from s_emp 
+         where id=v_id;
+     DBMS_OUTPUT.PUT_LINE(v_name);
+ END;
+  
+------------------------------------
+标示符 ----和sql中的规定相同
+给变量  游标  子程序  类型 命名
+
+变量声明的语法
+Var_name  [CONSTANT]  type[NOT NULL] [:=value];
+
+const 代表常量
+如果你想 变量必须有初始值 可以加 not null
+如果一个变量没有初始值那变量的默认值是 null
+
+declare
+  v_nu  constant number :=10;
+begin
+  v_nu:=100; --error
+  dbms_output.put_line(v_nu);
+end;
+
+数据类型：
+    数字类型(binary_integer)   字符类型    boolean  date
+
+组合类型：
+    记录类型   table类型 
+ 
+引用类型
+    ref  cursor 
+
+
+
+-----------------------------------
+%type   -----取表中某个字段的类型
+
+ declare
+     v_id   s_emp.id%type;
+     v_name s_emp.last_name%type;
+     v_count  number;
+ begin
+     v_id:=10;
+     select last_name into v_name from s_emp 
+         where id=v_id;
+     dbms_output.put_line(v_name);
+ end;
+-------------------------------------
+record 类型
+declare
+type   type_rec  is record(
+    id   number,
+    name varchar2(30)
+);
+var_rec type_rec;-- 用type_rec类型定义一个变量 var_rec
+var_rec2 type_rec;
+begin
+  --select id,last_name into var_rec from s_emp  where id=1;
+  --select id into var_rec from s_emp where id=1;//error
+    select id,last_name  into var_rec.id,var_rec.name from
+        s_emp  where id=1;
+    var_rec2:=var_rec;--记录类型整体赋值
+    var_rec2.id:=var_rec.id;--单个逐一赋值
+    dbms_output.put_line(var_rec.id||':'||var_rec.name);
+    dbms_output.put_line(var_rec2.id||':'||var_rec2.name);
+end;
+
+---如果我要接收s_emp表中的一条记录---
+type   type_rec  is record(
+    id   s_emp.id%type,
+    name s_emp.first_name%type;
+    .........
+);
+
+------------------------------------------------
+为了写的简洁一些  %rowtype ----取表的一行作为类型
+
+declare
+    var_rec  s_emp%rowtype; ---用更加简洁的语言定义一个变量var_rec
+begin
+    select id,last_name into var_rec.id,var_rec.last_name
+        from s_emp where id=1;
+    dbms_output.put_line(var_rec.id||':'||var_rec.last_name);
+end;
+
+----------------------------------------------------
+talbe 类型
+TYPE tabletype(table的类型名) IS TABLE OF 
+    type（表中的值的数据类型） INDEX BY BINARY_INTEGER;
+ 
+定义一个装字符串的table
+declare
+TYPE table_char IS TABLE OF char(30) INDEX BY BINARY_INTEGER;
+    var_t  table_char;
+begin
+    var_t(1):='hello world';
+    var_t(3):='hello';
+    dbms_output.put_line(var_t(1));
+end;
+
+先把s_emp 中所有的id为1,3,5数据放入一个table类型的变量中
+declare
+TYPE table_emp IS TABLE OF s_emp%rowtype INDEX BY BINARY_INTEGER;
+    var_t  table_emp;
+begin
+    select * into var_t(1) from s_emp where id=1;
+    select * into var_t(2) from s_emp where id=3;
+    select * into var_t(3) from s_emp where id=5;
+    dbms_output.put_line(var_t(1).id||':'||var_t(1).last_name);
+    dbms_output.put_line(var_t(2).id||':'||var_t(2).last_name);
+    dbms_output.put_line(var_t(3).id||':'||var_t(3).last_name);
+end;
+
+------------------------------------------------
+变量的作用域 和可见性
+<<outer>> --这是一个标签
+declare
+   var_n  number:=10;
+begin
+   declare 
+       var_n  number:=100;
+   begin
+       dbms_output.put_line('inner:'||var_n);
+       dbms_output.put_line('inner:'||outer.var_n);--访问外部变量
+   end;
+   dbms_output.put_line('outer:'||var_n);
+end;
+------------------------------------------------
+if 语句
+ if  表达式  then 
+ elsif  表达式 then
+ else
+ 
+ end if;
+--验证空值
+ declare
+    var_n1  number; --没有赋初始值  都是null
+    var_n2  number;
+ begin
+     if  var_n1=var_n2 then
+         dbms_output.put_line('var_n1=var_n2');
+     elsif var_n1>var_n2 then
+         dbms_output.put_line('var_n1>var_n2');
+     elsif var_n1<var_n2 then
+         dbms_output.put_line('var_n1<var_n2');
+     elsif var_n1 is null and var_n2 is null then
+         dbms_output.put_line('var_n1 and var_n2 is null');
+     else
+         dbms_output.put_line('var_n1 is var_n2');
+     end if;
+ end;
+
+ 当满足某个条件时什么都不做时 可以使用空语句
+ declare
+    var_n1  number; --没有赋初始值  都是null
+    var_n2  number;
+ begin
+     if  var_n1=var_n2 then
+         dbms_output.put_line('var_n1=var_n2');
+     elsif var_n1>var_n2 then
+         dbms_output.put_line('var_n1>var_n2');
+     elsif var_n1<var_n2 then
+         dbms_output.put_line('var_n1<var_n2');
+     elsif var_n1 is null and var_n2 is null then
+         dbms_output.put_line('var_n1 and var_n2 is null');
+     else
+         null; --让逻辑更加严谨和清晰
+     end if;
+ end; 
+-------------------------循环语句--------------------
+
+loop  
+   if  表达式  then
+      exit;--退出循环
+   end if;
+end  loop;
+
+输出1到10
+declare
+    var_n  binary_integer:=0;
+begin
+    loop
+        var_n:=var_n+1;
+	if var_n>10 then
+	   exit;
+        end if; 
+	dbms_output.put_line(var_n);
+    end loop;
+end;
+作业：把s_emp表中所有的数据放入一个table 中
+      并且循环输出这些数据 选id salary last_name输出
+
+while 循环
+while  表达式 loop
+end loop;
+
+表达式的作用是满足条件就循环 不满足就退出循环
+输出1到10
+declare
+    var_n  binary_integer:=0;
+begin
+    while var_n<10 loop
+        var_n:=var_n+1;
+	dbms_output.put_line(var_n);
+    end loop;
+end;
+
+作业:用sql建一张表  student(id,name,age)
+建一个序列 test 
+用循环插入100 条数据  名字和age 可以相同  
+
+
+for 循环输出1到10
+begin
+   for a in 1..10 loop
+      dbms_output.put_line(a); 
+   end loop;
+end;
+ 
+a  不用在declare 中声明  就可以直接使用
+
+<<lable_1>>   可以随时用随时定义
+
+goto 标签名;
+
+完成输出1 到10 
+declare
+   var_n  number:=0;
+begin
+   <<labe_go>>
+   var_n:=var_n+1;
+   if var_n<11 then
+      dbms_output.put_line(var_n);
+      goto labe_go;
+   end if;
+end;
+
+
+
+
+begin
+    --select id from s_emp where id=1;
+    insert into test values('abc',sysdate);
+    commit;
+end;
+只有dml 和dcl 可以直接在plsql块中使用 
+其它必须有特殊的语法  如select
+ddl 语句属于动态sql  有专门的语法
+repalce 
+a  变成  y
+
+select last_name,replace(last_name,'a','y') from s_emp;
+
+
+
+
+
+
+
+
+
+
+

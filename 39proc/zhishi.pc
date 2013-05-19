@@ -1,0 +1,39 @@
+#include <stdio.h>
+int main()
+{
+	EXEC SQL INCLUDE SQLCA;
+	EXEC SQL BEGIN DECLARE SECTION;
+	char userpw[30]="openlab/open123";
+	char last_name[2]={0};
+	short desc_var=0;
+	short desc_set[25]={0};
+	char name_set[25][30];
+	EXEC SQL END DECLARE SECTION;
+
+	EXEC SQL CONNECT:userpw;
+	EXEC SQL SELECT LAST_NAME INTO :last_name:desc_var FROM S_EMP WHERE ID=1;
+	printf("%s\n",last_name);
+	printf("%h\n",desc_var);
+
+	EXEC SQL SELECT LAST_NAME INTO :name_set:desc_set FROM S_EMP;  
+	printf("name_set[2]:%s\tdesc_set[2]:%h\n",name_set[2],desc_set[2]);
+	printf("name_set[10]:%s\tdesc_set[2]:%h\n",name_set[10],desc_set[10]);
+
+	int i;
+	for(i=0;i<sqlca.sqlerrd[2];++i)                 
+		printf("%d:%s\t%h\n",i,name_set[i],desc_set[i]);
+	
+	EXEC SQL COMMIT WORK RELEASE;
+	return 0;
+}
+
+/*
+ *本例说明了指示变量的使用，通过判断指示变量的值，来确定返回的值是否为空。
+   若为空值  指示变量为 -1
+   获得的是原值  指示变量为 0
+   数据被截断 指示变量 >0 为该条数据的长度
+   注意:可以一次性把一组字符串放到一个字符数组中
+   sqlca.sqlerrd[2]包含最近一条sql语句影响的行数
+ */
+
+

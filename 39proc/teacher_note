@@ -1,0 +1,304 @@
+telnet IP
+成功之后
+proc
+
+pro*C/C++
+
+4  -----192.168.0.26
+
+2  ---- 192.168.0.23
+
+1  -----192.168.0.20
+
+
+为了使用c/c++去访问数据库 要开发proc/c++的程序
+
+开发proc程序的标准流程
+1.编写.pc结尾的源文件  
+2.把.pc程序预处理成.c 文件  proc first.pc
+3.编译  链接   gcc first.c -lclntsh
+4.执行程序     ./a.out
+
+first.pc
+#include <stdio.h>
+int main(){
+    char  namepasswd[30]="openlab/open123";
+    char  last_name[30]={0};
+    EXEC SQL INCLUDE SQLCA;
+    EXEC SQL CONNECT:namepasswd; 
+    EXEC SQL select last_name into :last_name
+        from s_emp where id=1;
+    printf("%s\n",last_name);
+    EXEC SQL COMMIT WORK RELEASE;
+}
+
+判断一下 链接数据库是否成功
+sqlca 是oracle的通信区
+sqlca.sqlcode           ----最近的sql语句的执行状态 0 是成功  -1 失败
+sqlca.sqlerrm.sqlerrmc  ----最近的sql的错误信息
+sqlca.sqlerrd[2]        ----最近一条sql 影响的行数  
+#include <stdio.h>
+int main(){
+    char  namepasswd[30]="openlab/open123";
+    char  last_name[30]={0};
+    EXEC SQL INCLUDE SQLCA;
+    EXEC SQL CONNECT:namepasswd; 
+    if(sqlca.sqlcode==0)
+    { 
+    printf("connect success\n");
+    }else
+    {
+    printf("connect failed\n");
+    }
+    EXEC SQL select last_name into :last_name
+        from s_emp where id=1;
+    if(sqlca.sqlcode==0) 
+    printf("%s\n",last_name);
+    EXEC SQL COMMIT WORK RELEASE;
+}
+
+宿主变量
+c/c++ 使用的变量叫 c变量 c++的变量
+sql  语句中使用的变量 叫sql变量
+即能在c c++中使用 又能再sql语句中使用的变量 称之为宿主变量
+
+c中的宿主变量和c变量定义相同  只是在sql 语句中使用时加 :
+c++ 中宿主变量  使用也是要加:  定义必须在申明区
+申明区的语法
+EXEC SQL  BEGIN DECLARE SECTION; 申明区的开始
+    宿主变量的定义 和语言中定义相同
+EXEC SQL  END   DECLARE SECTION;
+
+把上面的例子改成 有申明区的代码
+#include <stdio.h>
+int main(){
+    EXEC SQL BEGIN DECLARE SECTION;
+    char  namepasswd[30]="openlab/open123";
+    char  last_name[30]={0};
+    EXEC SQL  END  DECLARE SECTION;
+    EXEC SQL INCLUDE SQLCA;
+    EXEC SQL CONNECT:namepasswd; 
+    if(sqlca.sqlcode==0)
+    { 
+    printf("connect success\n");
+    }else
+    {
+    printf("connect failed\n");
+    }
+    EXEC SQL select last_name into :last_name
+        from s_emp where id=1;
+    if(sqlca.sqlcode==0) 
+    printf("%s\n",last_name);
+    EXEC SQL COMMIT WORK RELEASE;
+}
+
+proc  指令 输出的文件名默认总是.c   oname=想要的文件名
+      code=cpp  parse=none
+1.把所有的宿主变量 放在申明区
+2.预处理时 proc iname=section.pc oname=section.cpp  code=cpp 
+   parse=none
+3.g++ section.cpp -lclntsh
+
+
+proc 中选项 
+    iname  输入的文件名   默认是.pc
+    oname  输出文件名   默认 xx.pc  xx.c
+    code   默认是c风格  c++需要用cpp
+    parse  默认是c的FULL  none 和partia  推荐none
+    mode   默认是oracle  c++推荐用ansi
+
+    userid  用用户名/密码去检测存储过程 是否合法
+
+
+指示变量  -------NULL-----nvl -----组函数 
+
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	char last_name[30];
+	short  desc_var;
+    exec sql end declare section;
+    exec sql connect :userpasswd;
+    exec sql select last_name into:last_name:desc_var 
+        from s_emp where id=1;
+    printf("%hd",desc_var);
+    exec sql commit work release;
+}
+
+
+数组变量
+    除字符串外  只支持到一维数组  最大 到32767
+    
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	char last_name[25][30];
+    exec sql end declare section;
+    exec sql connect :userpasswd;
+    exec sql select last_name into:last_name
+        from s_emp;
+    int i;
+    for(i=0;i<sqlca.sqlerrd[2];i++){
+    printf("%s\n",last_name[i]); 
+    }
+    exec sql commit work release;
+}  
+思考一个问题   如果想反映每个名字的赋值情况  怎么办？
+一个指示变量肯定搞不定  需要n个  
+
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	char last_name[25][30];
+	short  desc[25];
+    exec sql end declare section;
+    exec sql connect :userpasswd;
+    exec sql select first_name into:last_name:desc
+        from s_emp;
+    int i;
+    for(i=0;i<sqlca.sqlerrd[2];i++){
+    printf("%s:%hd\n",last_name[i],desc[i]); 
+    }
+    exec sql commit work release;
+}  
+
+
+如果 sqlca 的信息还满足不了你的需求  你可以使用oraca
+1.引入 oraca  
+   exec sql include oraca;
+2.让oraca生效
+   exec oracle  option(oraca=yes);
+3.oraca 的普通sql要保存 需设置一个字段 orastxtf 
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec  sql  include  oraca;
+    exec oracle option(oraca=yes);
+    oraca.orastxtf=3;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	char last_name[25][30];
+	short  desc[25];
+    exec sql end declare section;
+    exec sql connect :userpasswd;
+    exec sql select first_name into:last_name:desc
+        from s_emp;
+    printf("%s\n",oraca.orastxt.orastxtc);
+    int i;
+    for(i=0;i<sqlca.sqlerrd[2];i++){
+    printf("%s:%hd\n",last_name[i],desc[i]); 
+    }
+    exec sql commit work release;
+}  
+
+
+plsql 的调用
+1.建立一个函数  一个存储过程 以备调用
+   create  or replace  procedure  getempcount(emp_c out number) is
+   begin
+       select count(*) into emp_c from s_emp;     
+   end;
+   
+   create  or replace  function  getempcountfun 
+   return number is 
+   emp_c number;
+   begin
+       select count(*) into emp_c from s_emp; 
+       return emp_c;
+   end;
+1.调用plsql 需要在这个格式下调用 
+ exec sql execute  
+     begin 在这里调用 注意函数的调用    end;
+ end-exec;
+2.proc 要加 userid=openlab/open123  sqlcheck=semantics   
+3.gcc callplsql.c -lclntsh
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	int  emp_pro;
+	int  emp_fun;
+    exec sql end declare section;
+    exec sql connect :userpasswd;
+    exec sql execute
+    begin
+        getempcount(:emp_pro);
+        :emp_fun:=getempcountfun();
+    end;
+    end-exec;
+    printf("pro:%d\n fun:%d",emp_pro,emp_fun);
+    exec sql commit work release;
+}  
+
+-------------------------------------------------
+oracle 的链接
+echo  $ORACLE_SID  ------oracle的实例名
+同一个数据库 多个账户 
+char userp[30]="openlab/open123";
+char userp2[30]="scott/tiger";
+
+exec sql connect:userp;
+exec sql sqlstr; 
+exec sql connect:userp2;
+
+exec sql sqlstr; 区分不开到底是哪个账户
+
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	char userpasswd2[30]="scott/tiger";
+	char db1[20]="a";
+	char db2[20]="b";
+    exec sql end declare section;
+    exec sql connect :userpasswd at:db1;
+    exec sql at:db1 select first_name from s_emp where id=1;
+    exec sql connect :userpasswd at:db2;
+    exec sql at:db2 select first_name from s_emp where id=1;
+    printf("pro:%d\n fun:%d",emp_pro,emp_fun);
+    exec sql at:db1 commit work release;
+    exec sql at:db2 commit work release;
+}  
+如何链接 远程数据库
+192.168.0.23 ------------192.168.0.20
+
+借助一个文件  
+cd $ORACLE_HOME/network/admin
+
+tnsnames.ora 这个文件中描述符 负责远程链接
+CAH_192.168.0.26 =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.0.26
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = tarena)
+    )
+  )
+
+create  database link  mylink3 
+   CONNECT TO openlab IDENTIFIED BY open123 Using 'CAH_192.168.0.26';
+
+
+#include <stdio.h>
+int main(){
+    exec sql include sqlca;
+    exec sql begin declare section;
+        char userpasswd[30]="openlab/open123";
+	char last_name[30];
+    exec sql end declare section;
+    exec sql connect :userpasswd;
+    exec sql  select first_name into :last_name
+      from s_emp@mylink3 where id=2;
+    printf("%s\n",last_name);
+    exec sql  commit work release;
+}  

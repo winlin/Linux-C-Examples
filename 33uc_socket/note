@@ -1,0 +1,96 @@
+重点：
+     要注意处理多进程的控制和结束进程等状态
+*要注意处理多个子进程结束/终止时祖辈进程结束的顺序
+*同样也要注意祖辈进程结束时，子孙进程结束的情况
+（实例：mywork/myserver.c）
+
+scanf()不会包括回车符
+read()会包括回车符，注意一下这点区别
+fgets()会包括回车符
+>>>>>>>>
+网络
+
+多字节的数据就要考虑网络顺序和本地顺序的转换。
+本地字节序和网络字节序的转换：
+NAME
+ htonl,  htons,  ntohl,  ntohs - convert values between host and network byte order
+SYNOPSIS
+       #include <arpa/inet.h>
+       uint32_t htonl(uint32_t hostlong);
+       uint16_t htons(uint16_t hostshort);
+       uint32_t ntohl(uint32_t netlong);
+       uint16_t ntohs(uint16_t netshort);
+
+IP地址的转换：
+NAME
+       inet_pton - convert IPv4 and IPv6 addresses from text to binary form
+SYNOPSIS
+       #include <arpa/inet.h>  把点分进制转成内部格式
+       int inet_pton(int af, const char *src, void *dst);
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+NAME
+       inet_ntop - convert IPv4 and IPv6 addresses from binary to text form
+
+SYNOPSIS
+       #include <arpa/inet.h>
+把内部格式转化成点分十进制格式： 
+       const char *inet_ntop(int af, const void *src,
+                             char *dst, socklen_t size);
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+gethostname()
+gethostbyname()
+
+NAME
+       gethostname, sethostname - get/set hostname
+SYNOPSIS
+       #include <unistd.h>
+
+       int gethostname(char *name, size_t len);
+       int sethostname(const char *name, size_t len);
+
+NAME
+       gethostbyname,  gethostbyaddr,  sethostent,  gethostent,  endhostent,  h_errno, 
+       herror, hstrerror, gethostbyaddr_r, gethostbyname2, gethostbyname2_r, gethostbyname_r,
+       gethostent_r - get network host entry
+
+SYNOPSIS
+       #include <netdb.h>
+       extern int h_errno;
+
+       struct hostent *gethostbyname(const char *name);
+
+       #include <sys/socket.h>       /* for AF_INET */
+       struct hostent *gethostbyaddr(const void *addr,
+                                     socklen_t len, int type);
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+三次握手：
+client--req m---->server
+server--ack m+1/rep n---->client
+client--ack n+1--->server
+完成建立链接。
+断开链接的时候，也会进行三次握手，只不过是结束的信号。
+
+==============================================
+		server		client
+==============================================
+ 话机		socket		socket
+ 绑定号码	bind		
+ 多路接入	listen		
+ 等待链接	accept		connect到服务器
+ 转到分机	socket
+ 通讯		read/write <----> write/read    (自定义这一段)
+ 挂断		close分机  	close
+==============================================
+
+
+struct sockaddr_in  :保存套接字地址信息，IPV4
+struct sockaddr_in6 ：保存套接字地址信息，IPV6
+
+>>>>>>>>>>>>>>>>>>>>
+UDP协议
+
+send()
+recv()
+sendto()
+recvfrom()

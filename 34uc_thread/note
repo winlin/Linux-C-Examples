@@ -1,0 +1,43 @@
+>>>>>>>>>>>>>>>
+线程
+
+pthread_create()
+NAME
+       pthread_create - create a new thread
+SYNOPSIS
+       #include <pthread.h>
+       int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                          void *(*start_routine) (void *), void *arg);
+递交一个任务给系统。并行的执行，使用多线程。
+多个线程执行的顺序不确定。
+编译的时要添加-lpthread链接选项：gcc thread1.c -lpthread
+
+pthread_join()等待某个辅助线程的结束。
+NAME
+       pthread_join - join with a terminated thread
+SYNOPSIS
+       #include <pthread.h>
+       int pthread_join(pthread_t thread, void **retval);
+       Compile and link with -pthread.
+
+pthread_exit()专门结束一个线程的函数
+NAME
+       pthread_exit - terminate calling thread
+SYNOPSIS
+       #include <pthread.h>
+       void pthread_exit(void *retval);
+       Compile and link with -pthread.
+
+
+对于因特网域，如果指定IP地址为INADDR_ANY,套接字端点可以被绑定到所有的系统网络接口。
+这意味着可以收到这个系统所安装的所有网卡的数据包。如果在调用connect或listen，但没有
+绑定地址到一个套接字，系统会选择一个地址并将其绑定到套接字。
+
+获得线程的ID：
+ pthread_self - obtain ID of the calling thread
+SYNOPSIS
+       #include <pthread.h>
+       pthread_t pthread_self(void);
+       Compile and link with -pthread.
+ This is the same value that is returned in *thread in the  pthread_create(3)
+ call that created this thread.

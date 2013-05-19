@@ -1,0 +1,183 @@
+unlink()比remove()更安全
+因为只有指定的文件再没有一个指向它的链接时，才会删除该文件；
+remove则不会进行检查，直接删除
+
+
+IPC：ipcs 显示系统进程间通讯的情况
+形式：
+	共享内存
+	信号量  :实现进程间同步或互斥
+	消息队列
+	管道
+	socket
+
+创建的进程间通讯的对象，在程序结束以后，仍然存在。它们是由内核维护的。
+
+ipcrm 可以删除一个ipc对象。
+ipcrm可以处理进程间通信对象。
+>>>>>>>>>>>
+管道只有本地管道，没有远程管道；
+
+pipe()函数用于创建匿名管道
+NAME
+       pipe, pipe2 - create pipe
+
+SYNOPSIS
+       #include <unistd.h>
+
+       int pipe(int pipefd[2]);
+
+       #define _GNU_SOURCE             /* See feature_test_macros(7) */
+       #include <unistd.h>
+
+       int pipe2(int pipefd[2], int flags);
+
+管道：mkfifo/mkfifo() 既有命令，又有函数
+        管道是一个数据队列。
+	管道需要一个往里写，一个向外读。只有一端，则会进入等待。
+       mkfifo - make a FIFO special file (a named pipe)
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/stat.h>
+       int mkfifo(const char *pathname, mode_t mode);
+
+
+>>>>>>>>>
+网络通讯：套接字
+bind()绑定： 实际上就是把一个套接字绑定到本地的一个文件
+read()/write()/close()
+删除:unlink()
+
+使用bind端的是服务器；使用connect的是客户端
+
+本地套接字  AF_LOCAL/AF_FILE/AF_UNIX
+（需要在本地建立一个文件）
+
+网络套接字  
+（不需要本地文件，由内核维护）
+
+>>>>>>>>>>
+消息队列
+key 用于标示进程间通讯的方式标号。
+msgget()
+NAME
+       msgget - get a message queue identifier
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/ipc.h>
+       #include <sys/msg.h>
+
+       int msgget(key_t key, int msgfl)
+
+ipcs
+ipcrm
+
+msgsnd()
+msgrcv()
+NAME
+       msgrcv, msgsnd - message operations
+
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/ipc.h>
+       #include <sys/msg.h>
+
+       int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);
+
+       ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp,
+                      int msgflg);
+
+    struct msgbuf {
+               long mtype;       /* message type, must be > 0 */
+               char mtext[1];    /* message data 为1代表随意大小 */ 
+           };
+
+>>>>>>>>>
+共享内存
+shmget()创建/获得一个共享内存空间
+NAME
+       shmget - allocates a shared memory segment
+SYNOPSIS
+       #include <sys/ipc.h>
+       #include <sys/shm.h>
+       int shmget(key_t key, size_t size, int shmflg);
+
+shmctl() 处理/获得共享内存的信息
+NAME
+       shmctl - shared memory control
+
+SYNOPSIS
+       #include <sys/ipc.h>
+       #include <sys/shm.h>
+
+       int shmctl(int shmid, int cmd, struct shmid_ds *buf);
+
+删除延迟：如果仍有进程占用要删除的空间，则会延迟删除。
+
+shmdt()
+NAME
+       shmat, shmdt - shared memory operations
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/shm.h>
+       void *shmat(int shmid, const void *shmaddr, int shmflg);
+       int shmdt(const void *shmaddr);
+
+如果两个进程映射了同一块内存空间，则可以进行进程间通讯。
+
+>>>>>>>>>
+信号量
+semget()
+NAME
+       semget - get a semaphore set identifier
+
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/ipc.h>
+       #include <sys/sem.h>
+
+       int semget(key_t key, int nsems, int semflg);
+nsems可以指定创建的这个信号量集中含有多少个信号量，最少一个。
+
+semctl()设置信号量的信息
+NAME
+       semctl - semaphore control operations
+
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/ipc.h>
+       #include <sys/sem.h>
+
+       int semctl(int semid, int semnum, int cmd, ...);
+
+semop()使用一个信号量
+NAME
+       semop, semtimedop - semaphore operations
+
+SYNOPSIS
+       #include <sys/types.h>
+       #include <sys/ipc.h>
+       #include <sys/sem.h>
+
+       int semop(int semid, struct sembuf *sops, unsigned nsops);
+
+       int semtimedop(int semid, struct sembuf *sops, unsigned nsops,
+                      struct timespec *timeout);
+
+struct sembuf结构体的内容：
+           unsigned short sem_num;  /* semaphore number 信号量的下标，一般为0*/
+           short          sem_op;   /* semaphore operation 一个正数/负数相当于PV操作*/
+           short          sem_flg;  /* operation flags */
+ Flags  recognized in sem_flg are IPC_NOWAIT and SEM_UNDO.  If an operation specifies SEM_UNDO, 
+it will be automati‐cally undone when the process terminates.
+当一个占用信号量的进程被非法终止的时候，使用SEM_UNDO，会恢复由终止进程占用的信号量，所以SEM_UNDO一般都要声明。
+
+>>>>>>>>>>>>>>>
+scoketpair()
+NAME
+       socketpair - create a pair of connected sockets
+
+SYNOPSIS
+       #include <sys/types.h>          /* See NOTES */
+       #include <sys/socket.h>
+       int socketpair(int domain, int type, int protocol, int sv[2]);

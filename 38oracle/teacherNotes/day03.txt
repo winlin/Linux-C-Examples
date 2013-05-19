@@ -1,0 +1,425 @@
+1.数据库的设计
+  E-R 
+  一个顾客 拥有多个 订单
+  一个订单 只有一个 顾客
+  #  ------唯一的
+  *  ------非空
+  o  ------没有限制的 可选的
+  
+  对象和对象的关系
+  一对一 
+
+ 丈夫  妻子  
+   1     n
+
+  
+   0  2
+  
+
+
+  一对多
+  顾客  订单
+  多对多
+  学生  课程
+  一个学生 可以选多门课程
+  一个课程  可不可以被多学生选
+
+  如果这两个人的信息 成双入对  ------一张表
+  你需要一个人信息的时 并不需另一个的 -----可以两张表
+
+  如何来表达一对多  zhangsan  employe    1,2,3,4是Customer
+  1  zhangsan 23  1  lisi
+  1  zhangsan 23  2  zhao
+  1  zhangsan 23  3  zhang
+  1  zhangsan 23  4  wang
+  数据冗余 (时间 空间)
+  消除部分的冗余 ------拆表
+  1   zhangsan  23      1   lisi  1
+                        2   zhao  1
+                        3   zhang 1
+                        4   wang  1
+
+  思考一下多对多
+  student              course
+  1 zhangsan   23       1  c
+  2 lisi       24       2  c++
+  3 wangwu     25       3  uc
+                        4  oracle
+			5  plsql
+			6  proc/c++
+现在用一张表表达多对多
+   1 zhangsan   23       1  c
+   1 zhangsan   23       2  c++
+   1 zhangsan   23       3  uc
+   1 zhangsan   23       4  oracle
+   1 zhangsan   23       5  plsql
+   1 zhangsan   23	 6  proc/c++
+   2 lisi       24       1  c
+   2 lisi       24       2  c++
+   2 lisi       24       3  uc
+   2 lisi       24       4  oracle
+   2 lisi       24       5  plsql
+   2 lisi       24       6  proc/c++
+   3 wangwu     25       1
+   3 wangwu     25        2  c++
+   3 wangwu     25        3  uc
+   3 wangwu     25        4  oracle
+   3 wangwu     25        5  plsql
+   3 wangwu     25 	 6  proc/c++
+   先分出一张课程表
+    1  c
+    2  c++
+    3  uc
+    4  oracle
+    5  plsql
+    6  proc/c++
+   再做一张学生表
+    1 zhangsan   23
+    2  lisi      24
+    3  wangwu    25
+   下面的关系但放一张表 叫关系表
+   1  1  
+   1  2  
+   1  3  
+   1  4  
+   1  5 
+   1  6  
+   2  1  
+   2  2  
+   2  3  
+   2  4 
+   2  5 
+   2  6 
+   3  1
+   3  2  
+   3  3  
+   3  4  
+   3  5  
+   3  6  
+三范式
+   1 第一范式
+     所有的字段不可再分  面积(width/length)
+   2 第二范式
+     主属性-----非空 唯一
+     所有的非主属性 完全依赖于主属性
+   3 第三范式
+     在第二范式的基础上消除传递依赖-----拆表
+    1 sn001  zhangsan 0002  c    89  
+    2 sn001  zhangsan 0003  c++  99  
+    ( 1--->sn001)--->0002--->89
+   10 5个字段空着-----保留字段
+id                                fk
+1   zhangsan  23        1   lisi  1
+2   zhangsan  26        2   zhao  1
+                        3   zhang 1
+                        4   wang  1
+
+主键---------唯一标示一条记录的字段  不要用业务相关的字段做主键
+    ---------非空  唯一 
+    ---------一个表可以用多个非空唯一的字段  但主键只有一个
+外键---------外键的值受限于引用的字段
+    ---------外键的值要么是引用的字段所拥有的值 要么是null
+ 
+可以保证数据的完整性
+E-R  到表和表的关系
+1.实体名  ------表名
+2.属性  ------字段
+类型  -------字段类型
+3.主键  外键的区分
+一个员工  有多个顾客
+    emp     customer
+    1          m
+    主键       外键
+ 学生           课程
+ m               m
+ 主键           主键
+          
+ 关系表中 外键  外键
+
+4.关系对应（1:1  1:m  m:m）
+
+
+ 
+写成一个sql脚本
+
+数据类型   
+varchar2(n) ------变长字符串
+char(n)     ------定长字符串---如果数据不够长 就补空格
+create table tablename (
+    id    number,
+    fname varchar2(10),
+    sname char(10)
+);
+insert into tablename values(1,'abc','abc');
+commit;
+select length(fname),length(sname)  from tablename;
+
+select * from tablename where fname='abc ';
+select * from tablename where sname='abc ';
+定长就是比较长度范围内的值
+变长就是传入什么值就比较什么值
+什么时候用定长
+当这个字段的长度是不变的  身份证号码   
+什么时候用变长
+当这个字段的长度是变化的   name
+
+都做成定长的  ----存 取 效率不高
+18 ---- 255  ---237
+name -----char(255)
+zhangsan  247   zhangsan  ----浪费空间
+变长的-----空间利用率高255  存取效率低
+varchar2(255)
+a     a
+abc   abc 
+abcd  abcd
+'abcd'
+trim() -----去掉首尾空格
+select * from tablename where fname=trim('abc ');
+
+number  数字类型  10e-130 -------- 10 e127     
+number(p,s) -----p有效位  s精度
+
+blob  -----大二进制类型  4gb
+clob  -----大字符类型    4gb
+date 
+    英文环境下的日期默认格式   'dd-三个英文字母缩写-yy'
+    中文环境下的日期默认格式   'dd-1月-yy'
+
+drop table tablename;------删除表
+create table tablename (
+   id  number,
+   hirdate date
+);
+insert into tablename values(1,'02-AUG-86');
+
+to_date(字段/字面值,格式);
+select to_date('2009-08-08','yyyy-mm-dd') from dual;
+yyyy----四位年
+mm  ----月
+dd  ----日
+
+hh  ----小时 默认是12   hh24
+mi  -----分钟
+ss  -----秒
+=====================
+day   ---- 星期几
+dy    ---- 三个字母的星期几缩写
+MONTH ---- 英文月
+MON   ---- 三个字母的月的缩写
+
+必须和to_char 联合使用
+select to_char(start_date,'yyyy-mm-dd hh24:mi:ss day') 
+    from s_emp;
+select to_char(start_date,'yyyy') from s_emp;
+查询出三月入职的员工
+select last_name,start_date from s_emp 
+    where start_date   like  '%MAR%';
+select last_name,start_date from s_emp 
+    where to_char(start_date,'mm')=3;
+select last_name,start_date from s_emp 
+    where to_char(start_date,'mm')='03';
+sysdate ----2011-08-29 15:25:50
+trunc(sysdate,'dd')------2011-08-29 00:00:00
+select to_char(trunc(sysdate,'dd'),'yyyy-mm-dd hh24:mi:ss')
+    from dual;
+round(sysdate,'dd')------2011-08-30 00:00:00 
+select to_char(round(sysdate,'dd'),'yyyy-mm-dd hh24:mi:ss')
+    from dual;
+select to_char(round(sysdate,'yy'),'yyyy-mm-dd hh24:mi:ss')
+    from dual;
+ dd  --- 看过没过12点
+ mm  ----看过没过这个月的一半
+ yy  ----看过没过这一年的一半
+
+ trunc(sysdate+1,'dd');
+ trunc(sysdate,'dd')+1;
+ 思考一下有什么不同？
+ trunc(sysdate+1/24,'dd');------这个数据不确定
+ trunc(sysdate,'dd')+1/24;------当前天的1点中
+ 如果在一个时间上加1 代表加了一天
+
+ 思考一下有什么不同？
+ add_months(sysdate,n);
+ months_between(d1,d2) 算两个日期差几个月 返回小数
+                       如果正好是整月  返回整数
+ select months_between(sysdate,start_date) from s_emp;
+ select months_between('28-FEB-11','30-JUN-11') from dual;
+ next_day(sysdate) --------某个日期的下一天  第二个参数是星期几
+ select to_char(next_day(sysdate,'friday'),'yyyy-mm-dd hh24:mi:ss') from dual;
+ 如何得到一个时间的下一天的这个时刻
+ 加1就ok了？
+ select to_char(sysdate+1,'yyyy-mm-dd hh24:mi:ss') from dual;
+ last_day(sysdate) 
+ 时分秒信息 -----最后一天的这个时刻 
+  select to_char(last_day(sysdate),'yyyy-mm-dd hh24:mi:ss') 
+      from dual;
+ 处理成最后一天的9月1号的 00:00:00
+ 给你一个日期得到这个日期的下一个月的开始
+ add_months(trunc(sysdate,'mm'),1);
+ trunc(last_day(sysdate)+1,'dd');
+
+ 存储了时分秒信息 但默认显示只有 日-月的缩写-两位年
+
+如何建表   如何来表达关系  如何来设置约束
+
+create table 表名(
+   字段名  类型  default 值,
+   字段名  类型  default 值
+);
+约束：
+    主键  ------primary key
+    外键  ------foregin key
+    非空  ------not null  
+    唯一  ------unique
+    检查  ------check 
+
+列级
+   create table  test(
+       id  number  primary key,
+       tid  number 
+   );
+主键 非空 唯一
+insert into test values(null,null);
+表级
+   create table  test(
+       id  number,
+       tid  number,
+       primary key(id,pid)
+   );
+
+区别在于表级约束可以加联合约束
+注意:not null 约束只有列级约束  没有表级约束
+     没有联合非空这一说
+
+建一张表 id  number类型的主键
+         name  varchar2(30) 非空
+	 sno   char(30)  唯一
+         salary number
+create  table  test(
+    id   number constraint  test_pk primary key,
+    name  varchar2(30)   not null ,
+    sno   char(30)  constraint test_uk unique,
+    salary number
+);
+回去把这个例子改成表级约束  注意not null
+user_constraints 
+数据字典中查询出一个表上的约束有哪些
+select constraint_name,constraint_type 
+     from user_constraints where table_name='TEST';
+根据约束名删除约束的限制
+alter table test drop constraint SYS_C0015696;
+check 约束 
+create  table  test(
+    id   number constraint  test_pk primary key,
+    salary number check (salary>1000)
+);
+insert into test  values(1,1100);
+insert into test  values(2,900);
+大家回去改成表级
+create  table  test1(
+    id   number constraint  test1_pk primary key,
+    salary number,
+    check (salary>1000)
+);
+外键约束
+外键引用 某张表唯一性字段  
+在子表中定义外键
+ 1                  m
+主表(父表)         子表
+顾客                订单
+id                   id 
+cno --顾客编号       ono----订单号
+cname                fid----代表谁的订单
+建表--------先建父表后建子表
+父表
+create table customer(
+    id   number primary key,
+    cno  varchar2(20),
+    cname varchar2(30)
+);
+insert into customer values(1,'002','zhangsan');
+子表
+create table corder(
+    id   number primary key,
+    ono  varchar2(20),
+    fid  number references customer(id)
+);
+insert into corder values(1,'001',null);
+insert into corder values(2,'001',1);
+insert into corder values(3,'001',1);
+
+大家回去把这个一对多的关系改成1对1
+
+在理解了一对多关系的基础上建两张表 完成一个多对多
+student   course
+id          id
+sno         cno
+sname       cname
+关系表
+id
+sid
+cid
+查询id为1的人的名字和订单号
+select cname,o.ono
+    from customer c,corder o 
+        where c.id=o.fid  and c.id=1;
+插入数据时 子表的外键要么是null 要么是主表字段中的值
+
+事务 ------原子性  一致性  隔离性 持久性(AUCD)
+转账
+A           B
+200000      0
+150000      50000
+200000      50000 //error
+150000      0     //error
+200000      0    //
+
+A  update  account  set salary=salary-50000  where id=1;
+   update  account  set salary=salary+50000  where id=2;
+
+隔离性
+    insert into corder values(4,'004',1);
+oracle的事务是非自动提交的     mysql  sqlserver 自动提交
+
+sql的语言的分类：
+  dql  ---select -----没有事务这一说
+  dml  ---update  insert  delete  ----非自动提交 
+  ddl  ---create  drop alter  ------事务自动提交
+  dcl  ---grant  revoke
+  tcl  ---commit  rollback  savepoint
+ 
+create table t (id number primary key,salary number);  
+SQL>  insert into t values(1,1000);
+SQL>  savepoint  a;
+SQL>  insert into t values(2,1000);
+SQL>  rollback to a;
+SQL>  commit;
+ 
+不commit 数据在回滚段中
+
+
+你自己来控制主键？
+
+   
+其它的数据对象
+
+
+
+
+
+
+
+
+
+
+
+补充
+
+
+
+
+
+
+
+
+       

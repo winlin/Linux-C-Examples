@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>400</width>
+    <height>300</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>WinLin</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="Resource.qrc">
+    <normaloff>:/new/prefix1/actions/tools-check-spelling.png</normaloff>:/new/prefix1/actions/tools-check-spelling.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QTextEdit" name="textEdit"/>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>400</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="separator"/>
+    <addaction name="actionSafe"/>
+    <addaction name="actionSaveAS"/>
+    <addaction name="separator"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionCopy"/>
+    <addaction name="actionCut"/>
+    <addaction name="actionPaste"/>
+    <addaction name="separator"/>
+    <addaction name="actionFind"/>
+    <addaction name="actionReplace"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNew"/>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSafe"/>
+   <addaction name="actionUndo"/>
+   <addaction name="actionCopy"/>
+   <addaction name="actionPaste"/>
+   <addaction name="actionCut"/>
+   <addaction name="separator"/>
+   <addaction name="actionFind"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionNew">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/document-new.png</normaloff>:/new/prefix1/actions/document-new.png</iconset>
+   </property>
+   <property name="text">
+    <string>New</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/document-open.png</normaloff>:/new/prefix1/actions/document-open.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionSafe">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/gtk-save.png</normaloff>:/new/prefix1/actions/gtk-save.png</iconset>
+   </property>
+   <property name="text">
+    <string>Safe</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionUndo">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/stock_undo.png</normaloff>:/new/prefix1/actions/stock_undo.png</iconset>
+   </property>
+   <property name="text">
+    <string>Undo</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Z</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionCopy">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/editcopy.png</normaloff>:/new/prefix1/actions/editcopy.png</iconset>
+   </property>
+   <property name="text">
+    <string>Copy</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionPaste">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/edit-paste.png</normaloff>:/new/prefix1/actions/edit-paste.png</iconset>
+   </property>
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionCut">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/gtk-cut.png</normaloff>:/new/prefix1/actions/gtk-cut.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cut</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/edit-find.png</normaloff>:/new/prefix1/actions/edit-find.png</iconset>
+   </property>
+   <property name="text">
+    <string>Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionReplace">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/edit-find-replace.png</normaloff>:/new/prefix1/actions/edit-find-replace.png</iconset>
+   </property>
+   <property name="text">
+    <string>Replace</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionSaveAS">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/gtk-revert-to-saved-ltr.png</normaloff>:/new/prefix1/actions/gtk-revert-to-saved-ltr.png</iconset>
+   </property>
+   <property name="text">
+    <string>SaveAS...</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/application-exit.png</normaloff>:/new/prefix1/actions/application-exit.png</iconset>
+   </property>
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+  <action name="actionRedo">
+   <property name="icon">
+    <iconset resource="Resource.qrc">
+     <normaloff>:/new/prefix1/actions/gtk-redo-ltr.png</normaloff>:/new/prefix1/actions/gtk-redo-ltr.png</iconset>
+   </property>
+   <property name="text">
+    <string>Redo</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <resources>
+  <include location="Resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

@@ -1,0 +1,6 @@
+作业：
+	INT(b1, b2, b3, b3);//4个字节构成一个整数
+	HIBYTE(short number);//取得短整形的高字节
+	LOBYTE(short number);//取得短整形的低字节
+	HIWORD(int i);//取提高两字节
+	LOWORD(int i);//取得低两字节

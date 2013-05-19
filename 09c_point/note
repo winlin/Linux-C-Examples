@@ -1,0 +1,166 @@
+一、结构体，联合体，枚举
+
+结构体变量可以直接使用=等号进行不同结构体变量的赋值。
+
+typedef int IA10[10];    //typedef int [10] IA10;  是错误的c
+IA10 bb;
+
+传递指针与传递参数的效率问题：
+如果在一个函数中频繁使用指针访问其指向的对象，那么进行的间接寻址所消耗的CPU可能要比传递值要慢很多；这是一个空间换时间的问题。
+
+struct Point get()
+{
+    Point p={1,2};
+    return p;   //RIGHT：return返回的只是一个p的临时拷贝对象，p会撤销，但是临时拷贝仍然存在
+                      //如果使用则使用临时拷贝，否则也会撤销临时拷贝变量
+}
+
+struct Point* get()
+{
+   Point p={1,2};
+   return &p;   //ERROR：不可以返回局部变量的地址
+}
+
+struct Point* get(Point *pp)
+{
+   pp->x++;
+   pp->y++;
+   return pp;      //RIGHT:因为pp指向的空间不会被在函数调用结束时释放
+}
+函数的返回值：
+我们在一个函数中返回的对象，实际上并没有直接返回该对象，而是返回该对象的一个拷贝，
+然后该拷贝或者被使用或者被释放掉。
+函数的返回值是一个临时值，并且函数的返回值不可以作为左值！
+
+
+################################
+联合
+union U
+{
+  char c1;
+  char c2;
+  int i;
+};
+使用联合可以判断CPU的大小端问题。
+
+我们使用联合可以实现 “对一片内存区域进行不同的解释”.
+###############################
+枚举enum
+#include <stdio.h>
+int main(  )
+        {
+                enum Season{SPRING,SUMMER,AUTUMN,WINTER};
+                enum Season s;
+                s=SPRING;
+                printf( "s=%d\n",s );
+                return 0;
+        }
+/*其中的项SPRING相当于定义的一个常量整数
+   可以当作int来使用；
+   int x=SUMMER;
+   x=SUMMER+100;
+
+  枚举类型其实就是int类型，
+  枚举变量其实就是int变量，
+  如 s=121321;
+ */
+
+使用枚举的唯一作用就是增加程序的“可读性”。
+
+
+二、位段（位域）
+不能对位段的数据成员进行取地址操作，因为其成员占有的空间可能还不足1B。
+#include <stdio.h>
+int main(  )
+        {
+                typedef unsigned int UINT;
+                struct Ct1
+                        {
+                                UINT  INT:1;
+                                UINT  C1:1;
+                                UINT  C2:1;
+                                UINT  C3:1;
+                                UINT RES:1;
+                };
+
+                struct Ct1 c;
+                printf( "sizeof( struct Ct1 )=%ld\n",sizeof( c ) );
+                return 0;
+                
+        }
+//结果为4B，结构体最小占用4B
+
+>>>>>>>>>>>>>>>>>>
+三、指针的高级应用
+野指针的使用可能会造成“段错误”或者“破坏数据”。
+悬空指针，指向已被释放空间的指针。
+char * fb()
+{
+  char *str="abdcd";
+  return str;   //这个返回字符串常量的地址是可以的,字符串存放在代码区
+                       //返回字符串的字面值是安全的，如:    return "dfsadfasd";
+}
+>>>>>>>>>>>>>
+双指针，指向指针的指针
+使用双指针的原因是想修改一个指针的指向，如：
+chang_point(char* str)
+{
+     str="fffgfgf";
+}
+
+char* str="adfasdsd";
+chang_point(str);     //这样调用并不会修改str指针的指向，实际上传递到chang_point()的参数是一个str的拷贝
+                                  //chang_point()只会修改拷贝的那个变量
+                                  //要真正的改变str的指针，应当让形参是双指针
+chang_point(char** str)
+{
+   *str="fffadfsd";                //这时就可以修改str本身的指向
+}
+chang_point(&str);
+
+>>>>>>>>>>>>>>>
+void* 指针
+void* p= NULL;
+int x=10;
+p=&x;
+double d=3.14;
+p=&d;  //不能对void指针进行*号运算，因为他不知道要取多少B
+++p;  //void指针++/--都是按照1B为单位来算
+
+>>>>>>>
+void指针作为函数的参数可以传递任何类型的地址，让函数变得更通用。例如malloc()函数。
+
+>>>>>>>
+函数指针
+void fa() {};
+void (*pfun) ();
+pfun=&fa;
+确定一个函数的类型，只要把函数名去掉，就是该函数的类型
+如:   
+int* fb(int*,int*);
+
+int* (*pfb)(int*,int*);
+定义一个函数指针类型的别名:
+typedef int* (*PF)(int*,int*) 
+PF pfc;
+pfc=&fb;  
+获得一个函数的地址可以对函数名取地址，也可以函数名本身就代表函数的地址，就像数组名一样；
+调用函数时有两种方式：
+(*pfc)(a,b);
+pfc(a,b);    //因为函数名本身就是地址，也没有加(* ),所以可以直接使用函数指针直接调用即可！！！！
+
+>>>>>>>>>>>>
+#include <stdlib.h>
+qsort()  //标准库提供的一个通用的快速排序
+
+>>>>>>>>>>>>>>
+函数可以返回一个函数，或者函数指针，比如signal()函数：
+#include <signal.h>
+typedef void (*sighandler_t)(int);       //typedef 定义一个函数指针的别名
+sighandler_t signal(int signum, sighandler_t handler);
+
+>>>>>>>>>>>>>>
+对于一个数组名，取地址和不取地址值是一样的，但是类型不一样。
+int aa[5];
+int* p=aa;   //这时aa代表aa[0]的地址
+int (*p)[5]=&aa;   //&aa代表整个数组的首地址

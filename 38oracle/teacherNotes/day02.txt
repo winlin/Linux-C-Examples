@@ -1,0 +1,371 @@
+1.找出和Carmen职位相同的人
+  第一步先把Carmen的职位查出来
+  再查询和这个职位相同的人
+  select title from s_emp where first_name='Carmen';
+  select title,first_name from s_emp  where title='a' 
+      and first_name!='Carmen';
+2.查询工资大于1000的 员工按工资降序 工资相同按名字降序
+  select  last_name,salary from s_emp where salary>1000
+      order by salary desc,last_name desc;
+3.查询出id是1,3,5的员工 不允许用in
+  select last_name,id from s_emp where id=1 or id=3 or id=5;
+4. 找出last_name长度是4 并且工资大于1500的员工 按工资升序
+  select last_name,salary from s_emp where length(last_name)=4
+  and salary>1500  order by salary;
+     多行函数------对一组记录处理后产生一个返回值---组函数
+         select count(nvl(manager_id,0)) from s_emp;
+
+数字处理函数：
+    round  四舍五入 round(11.4,0)---11  round(11.5) ---12 
+    trunc  截取     trunc(11.4,0)---11  trunc(11.5) ---11
+    第二参数可以省略  省略默认是0  
+to_char()
+select to_char(salary,'fm$099,999,999.99') from s_emp;
+select to_char(salary,'fmL099,999,999.99') from s_emp;
+
+改成中文货币符号
+环境变量----NLS_LANG
+查看数据的本地语言
+select userenv('language') from dual;
+切换成中文 
+bash -----$
+NLS_LANG='SIMPLIFIED CHINESE_CHINA.ZHS16GBK'
+csh  -----%
+1.在sh下 setenv NLS_LANG 'SIMPLIFIED CHINESE_CHINA.ZHS16GBK'
+2.sqlplus-----就可以看出
+to_number
+oracle的隐式数据类型转换
+select last_name from s_emp where id='1';
+select last_name from s_emp where id=1;
+
+to_char 可以不跟后面的格式----就是简单的把对应的类型加上单引号
+last_name manager_id
+ Carmen   'BOSS'
+ steven    12
+1.select  first_name,manager_id from s_emp; 
+2.select  first_name,nvl(manager_id,'BOSS') from s_emp;//error
+3.select  first_name,nvl(to_char(manager_id),'BOSS') from s_emp;
+
+
+ 笛卡尔集
+   s_dept ----部门表
+   desc  s_dept
+   名称
+ ------------------------------------
+ ID -----部门编号
+ NAME----部门名称
+ REGION_ID---地区编号
+ 找出每个员工和他对应的部门名称
+ 造一张表出来
+ select last_name,dept_id,name from s_emp,s_dept;---300
+ select last_name,dept_id,name from s_emp,s_dept---25
+      where dept_id=s_dept.id;
+ 注意：先执行where条件  不满足的不去做匹配
+   *E muti table select(多表查询)
+   内连接  ------完全符合where的数据被选择出来
+       等值连接
+       select last_name,dept_id,name from s_emp,s_dept---25
+          where dept_id=s_dept.id; 
+       select last_name,dept_id,name from s_emp e,s_dept d
+          where dept_id=d.id;  
+       s_region
+       id  -----地区编号
+       name-----地区名称
+       要求把每个员工last_name对应的部门名称 和 地区名称
+       select  e.last_name,d.name,r.name  
+           from s_emp e,s_dept d,s_region r
+               where e.dept_id=d.id and d.region_id=r.id;
+       col name for a20 ----名字为name的这一列最多一行显示20
+       col last_name for a16
+       非等值连接
+       salary  
+                 salary  between  lowsal and hisal
+       salgrade
+      GRADE    LOSAL      HISAL
+      ------- ---------- ----------
+      1        700       1200
+      2       1201       1400
+      3       1401       2000
+      4       2001       3000
+      5       3001       9999
+
+
+       salary>=800  and salary<=1000
+       每个员工的last_name,salary 和对应的工资级别显示出来
+       select e.last_name,e.salary,g.grade
+           from s_emp e,salgrade g
+               where e.salary between g.losal and g.hisal;
+     
+       自连接
+           s_emp 中的所有的领导
+	   id   manager_id
+	   1         
+	   2         1
+	   3         1
+	   4         2
+	   5         3
+如果一个员工的id 和一个员工的manager_id 相等
+        select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e,s_emp m
+	        where m.id=e.manager_id;
+  8个领导  25-8=17个普通员工       
+   外连接（outer join）=内连接+匹配不上的----（一个也不能少）
+   如果是外连接的语法  加号对面的表中的数据全都查询出来
+   在内连接的基础上把匹配不上的数据通过空值匹配出来
+   select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e,s_emp m
+	        where m.id=e.manager_id(+);
+   这些人是普通员工
+      select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e,s_emp m
+	        where m.id=e.manager_id(+)
+		and  e.manager_id is null;
+ 1.update  s_emp set dept_id=null where dept_id=50;
+   commit;
+ 2.查询出last_name,dept_id 对应的部门名称
+   select last_name,dept_id,d.name 
+       from  s_emp e,s_dept d
+           where e.dept_id=d.id; ----23 个人匹配
+  3.显示所有员工对应的部门号 和部门名称  如果没有部门名称则
+    显示 'no department'
+    select last_name,dept_id,d.name 
+       from  s_emp e,s_dept d
+           where e.dept_id=d.id(+);
+  4.把没有部门名称的人显示出来 部门名称显示成'no department'
+    select last_name,nvl(to_char(dept_id),'no department') 
+        from s_emp where dept_id is null;
+    select last_name,dept_id,nvl(d.name,'no department') 
+       from  s_emp e,s_dept d
+           where e.dept_id=d.id(+)
+	       and d.id is null;
+
+   要所有的普通员工（那些人不是领导）
+       等值连接
+       非等值连接
+       5  3001  10000
+       显示所有级别对应的员工的last_name  'no employee'
+       要级别表中所有的数据  那加号应该加在那边？
+        select e.last_name,e.salary,g.grade
+           from s_emp e,salgrade g
+               where e.salary between g.losal and g.hisal;
+         select nvl(e.last_name,'no employee'),e.salary,g.grade
+           from s_emp e,salgrade g
+               where e.salary(+) between g.losal and g.hisal;
+       现在有一个员工 他的工资不在5个级别的范围之内  
+       但我要显示这个员工的级别  把他的级别显示成0
+       update s_emp set salary=0 where first_name='Carmen';
+       commit;
+       内连接的sql如下  加号怎么加？
+       select e.first_name,e.salary,g.grade
+           from s_emp e,salgrade g
+               where e.salary between g.losal(+) and g.hisal(+);
+	
+       自连接 
+
+   外连接  sql99 
+   select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e,s_emp m
+	        where m.id=e.manager_id;
+   在上面的sql基础上改成查询所有普通的员工
+   oracle 外连接的语法是
+   select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e,s_emp m
+	        where m.id=e.manager_id(+)
+		and e.manager_id is null;
+   那张表中数据要被全部查询出来就由那张表发起连接
+   1.把加号 去掉 
+   2.把逗号替换成left outer join /right outer join
+   3.把where 换成 on  到此完成外连接
+    select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e right outer join s_emp m
+	        on m.id=e.manager_id;
+    上面的是完成外连接 
+    如果要对外连接的结果集进行 过滤 要用where条件
+   4.如果有连接条件之外的条件需要加 where
+     select  distinct m.last_name,m.id,e.manager_id
+	    from  s_emp e right outer join s_emp m
+	        on m.id=e.manager_id
+		where e.manager_id is null;
+   内连接的sql如下  
+       select e.first_name,e.salary,g.grade
+           from s_emp e,salgrade g
+               where e.salary between g.losal(+) and g.hisal(+);
+   改成sql99的语法
+       select e.first_name,e.salary,g.grade
+           from s_emp e left outer join salgrade g
+               on e.salary between g.losal and g.hisal;
+   总结：
+       内连接-----完全符合查询条件的数据被选择出来
+           等值连接     =
+	   非等值连接   between and  >= <= in like is
+	   自连接 ----所有的数据在一张表  给表起别名
+
+            
+       外连接
+           等值连接     =
+	   非等值连接   between and  >= <= in like is
+	   自连接 ----所有的数据在一张表  给表起别名
+       为了保持外连接的通用性 sql99的标准
+       left outer join  /right outer join
+       full outer join=左外+右外-重复的
+       
+   union/uoion all (union 和并结果集时排重  union all)
+   select id from s_emp union
+   select id from s_emp;
+
+   select id from s_emp union all
+   select id from s_emp;
+
+   左外 24  右外25
+
+    select e.first_name,e.salary,g.grade
+           from s_emp e full outer join salgrade g
+               on e.salary between g.losal and g.hisal;---27
+     select e.first_name,e.salary,g.grade
+           from s_emp e left outer join salgrade g
+               on e.salary between g.losal and g.hisal union
+      select e.first_name,e.salary,g.grade
+           from s_emp e right outer join salgrade g
+               on e.salary between g.losal and g.hisal; ---26
+   F group by （分组  组函数）
+     组函数 是对一组数据处理之后得到一个结果
+     count() ----统计个数 
+     max     -----最大
+     min     -----最小
+     avg     -----平均
+     sum     -----求和
+    select sum(salary)  from s_emp;
+    select max(salary)  from s_emp;
+    那个部门工资占用最大
+    按部门分组
+    select   
+        from 
+	    where
+	        group by  
+		    order by
+    用dept_id 分组
+    select dept_id from s_emp  group by dept_id;
+    select salary,dept_id from s_emp  group by dept_id;
+    一个部门中工资很多 
+    select salary,dept_id from s_emp  group by salary,dept_id;
+    从每个部门中挑出一个工资最高
+    select max(salary),dept_id from s_emp  group by dept_id;
+    统计出每个部门的每个月的支出
+    select sum(salary),dept_id from s_emp  group by dept_id
+        order by sum(salary);
+    select sum(salary) s,dept_id from s_emp  group by dept_id
+        order by s;
+    求每个月支出最大的部门 -----告诉你支出最大的部分是41
+    select sum(salary) s,dept_id from s_emp  
+        where dept_id=41
+	group by dept_id
+        order by s; //error
+    和上面有什么区别？
+    select sum(salary) s,dept_id from s_emp  
+	group by dept_id having  dept_id=41
+        order by s;
+
+    where 的执行是在group by 之前的
+    having是对分组之后的数据进行处理
+     select   
+        from 
+	    where
+	        group by 
+		    having 
+		        order by
+     注意： 
+         1.group by 的字段可不可以不出现在select 后  可以
+	 2.如果一个字段不出现在group by之后 就必须用组函数进行处理
+	 3.having是对分组之后的数据进行过滤
+
+   G sub  query(子查询)
+     那些人是领导 ？
+ select distinct manager_id from s_emp;(得到所有领导的id 和NULL)
+ select last_name,id,manager_id 
+     from s_emp where id in(1,2,3,6,7,8,9,10);
+  select last_name,id,manager_id 
+     from s_emp where id 
+        in(select distinct manager_id from s_emp);
+  把一个查询的结果作为另一个查询的条件
+
+   和Carmen做相同工作的人？
+   select title from s_emp where 
+       first_name='Carmen';
+   select first_name,title from 
+       s_emp where title =(select title from s_emp where 
+       first_name='Carmen')
+       and first_name!='Carmen';
+
+   工资总和大于42部门的所有部门和支出总和
+    1.先求42部门的支出总和是多少
+    2.求按部门分组之后的的每个部门的支出总和
+    3.通过having子句对分组之后的数据进行过滤 得到最终的结果
+    
+    select sum(salary) from s_emp where dept_id=42;
+    select sum(salary), dept_id  from s_emp
+        group by dept_id
+	    having  sum(salary)>(select sum(salary) 
+	                    from s_emp where dept_id=42);
+
+   补充：子查询不但可以用在where having之后
+          还可以用在from之后
+    select sum(salary) s,dept_id from s_emp  
+	group by dept_id having  dept_id=41
+        order by s;
+    select s,dept_id ,n from (select sum(salary) s,
+        dept_id,max(name) n
+        from s_emp,s_dept where dept_id=s_dept.id  
+	group by dept_id
+        order by s) where dept_id=41; 
+     
+作业
+   1.查询每个员工对应的地区 (等值连接) 25 12 5
+     select last_name,r.name
+         from s_emp e,s_dept d,s_region r 
+	     where e.dept_id=d.id and  d.region_id=r.id;
+   2.查询那些人是领导  用外连接做和子查询(oracle/sql99) 
+     select distinct m.last_name,m.id,e.manager_id
+         from  s_emp e, s_emp m 
+         where m.id=e.manager_id(+) and
+	 e.manager_id is not null;
+     用子查询做哪些人是领导
+     select last_name,id,manager_id from s_emp 
+     where id in(select distinct  manager_id from s_emp);
+     用子查询做哪些人不是领导
+     select last_name,id,manager_id from s_emp 
+     where id not in(select distinct  manager_id from s_emp);//error
+      select last_name,id,manager_id from s_emp 
+           where id not in(select distinct  manager_id 
+                          from s_emp where manager_id is not null);
+   注意：用not in 时集合中不能有null  
+   3.求工资总和大于等于10部门的部门名称和工资总和
+     select  dept_id,sum(salary),max(d.name) from s_emp e,s_dept d
+         where e.dept_id=d.id   group by dept_id
+	 having sum(salary)>=(select sum(salary) 
+	                           from s_emp 
+				   where dept_id=10)
+				   and dept_id!=10;
+   4.select sum(salary) ss, dept_id  from s_emp
+        group by dept_id
+	    having  ss>(select sum(salary) 
+	                    from s_emp where dept_id=42);
+			    //why  erorr
+      select 5  
+          from   1
+              where  2
+	           group by 3
+		       having  4
+			   order by 6   
+   5.以dept_id 分组显示每个部门中工资最高的一个人的last_name
+     还要显示出这个人的部门名称。
+     select max(salary),min(last_name),dept_id,min(d.name)  from 
+         s_emp e,s_dept d 
+	      where e.dept_id=d.id
+	           group by dept_id;
+
+   注:3,5参考
+   select sum(salary) s,
+       dept_id,max(name) n
+           from s_emp,s_dept where dept_id=s_dept.id  
+	       group by dept_id
+                   order by s; 

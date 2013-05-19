@@ -1,0 +1,82 @@
+                   >>>>>>>>>>>内存布局<<<<<<<<<<<<
+  低    code代码段
+  |	data
+  |	bss	
+  |	heap堆
+  |	stack栈
+  高	环境数据
+
+C++为bool分配一个字节的空间。
+
+getpagesize()获得内存页的大小
+#include <unistd.h>
+int getpagesize(void);
+4KB 0x1000H
+Portable applications should employ sysconf(_SC_PAGESIZE) instead of getpagesize():
+#include <unistd.h>
+long sz = sysconf(_SC_PAGESIZE);
+(Most systems allow the synonym _SC_PAGE_SIZE for _SC_PAGESIZE.)
+
+增加程序可用的数据空间(增加数据段的空间)
+brk, sbrk - change data segment size
+SYNOPSIS
+       #include <unistd.h>
+       int brk(void *addr);
+       void *sbrk(intptr_t increment);
+       brk() sets the end of the data segment to the value specified by  addr,
+       when  that  value  is reasonable, the system has enough memory, and the
+       process does not exceed its maximum data size (see setrlimit(2)).
+
+       sbrk() increments the program's data space by increment bytes.  Calling
+       sbrk()  with an increment of 0 can be used to find the current location
+       of the program break.
+
+RETURN VALUE
+       On success, brk() returns zero.  On error, -1 is returned, and errno is
+       set to ENOMEM.  (But see Linux Notes below.)
+
+       On  success,  sbrk() returns the previous program break.  (If the break
+       was increased, then this value is a pointer to the start of  the  newly
+       allocated memory).  On error, (void *) -1 is returned, and errno is set
+       to ENOMEM.
+
+
+alloca()在栈里面分配一段空间：
+   alloca - allocate memory that is automatically freed
+SYNOPSIS
+       #include <alloca.h>
+       void *alloca(size_t size);
+DESCRIPTION
+       The  alloca() function allocates size bytes of space in the stack frame
+       of the caller.  This temporary space is automatically  freed  when  the
+       function that called alloca() returns to its caller.
+RETURN VALUE
+       The  alloca()  function returns a pointer to the beginning of the allo‐
+       cated space.  If the allocation causes stack overflow, program behavior
+       is undefined.
+
+mmap()把一个文件映射到内存
+mmap, munmap - map or unmap files or devices into memory
+SYNOPSIS
+       #include <sys/mman.h>
+       void *mmap(void *addr, size_t length, int prot, int flags,
+                  int fd, off_t offset);
+       int munmap(void *addr, size_t length);
+
+ftruncate()设置文件长度
+  truncate, ftruncate - truncate a file to a specified length
+SYNOPSIS
+       #include <unistd.h>
+       #include <sys/types.h>
+
+       int truncate(const char *path, off_t length);
+       int ftruncate(int fd, off_t length);
+
+
+fork()创建一个进程
+NAME
+       fork - create a child process
+SYNOPSIS
+       #include <unistd.h>
+       pid_t fork(void);
+

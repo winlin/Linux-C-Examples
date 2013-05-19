@@ -1,0 +1,277 @@
+2011_6_30
+田强
+15010685632
+tianqiang@tarena.com.cn
+
+一、shell介绍
+chmod a+x first.sh  ;  ./first.sh
+export PATH=$PATH:.  ;  first.sh 可以直接输入脚本文件名称，添加当前目录到PATH路径
+
+
+二、文件系统
+根目录
+df -k查看文件系统
+PATHNAME 路径名 绝对路径，相对路径
+
+修改密码的命令passwd
+/etc/passwd文件保存了所有用户的信息，包括修改登录shell
+/ect/shadow用来存放经过加密的密码信息，只有root可以查看，但是由于加密root也不知道别人的密码
+
+三、命令
+一条命令行不要超过256个字符，如果超过使用换行符进行
+id显示当前用户的详细信息
+
+ls -t 按照最后一次修改时间来进行排序
+ls -R 递归列出目录下面的所有文件
+ls -F 显示文件类型：/目录，*文件		
+
+chmod
+默认创建文件的权限644
+默认创建目录的权限755 
+
+mkdir 
+可以一次创建多个目录 mkdir dir1 dir2dir3;
+可以创建不存在的多级目录 mkdir -p dir4/dir5/dir6,但是，如果没有-p则是不能多层次创建；
+
+拷贝目录时，若目标文件夹已经存在，则会把原目录放到目标文件夹的下面：
+cp -r dir2 dir4    ;(dir4,dir2都已经存在)
+
+temp目录，任何用户都可以向其中写入文件，但是只有属主才能删除自己创建的文件：
+drwxrwxrwt.  75 root root  4096 Jul  1 10:12 tmp
+创建自己的temp目录:
+mkdir -m 777 ~/temp
+chmod +t temp
+或者：
+mkdir -m 1777 ~/temp    ;(还可以有2777，3777，4777，5777，6777，7777)
+临时目录占用的是交换空间，系统重启的时候可能导致文件的丢失。
+
+去掉一个目录的读权限，我们就不可以在该目录下执行ls，但是并不影响对该目录里面的
+文件/文件夹的读写。
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+chfn(1), chsh(1), passwd(1), crypt(3), gpasswd(8), groupadd(8), groupdel(8), groupmod(8), login.defs(5),
+useradd(8), userdel(8).
+
+创建一个用户:
+adduser tarena -U -G wheel 
+wheel用户组的成员可以执行sudo命令
+更改一个用户的用户组：
+usermod -G groupnemae username
+
+～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～～
+
+winlin@localhost ~$ ls -l -i     -i的作用就是显示文件标号
+total 72
+2752629 drwx------.  3 winlin winlin 4096 May 21 01:06 BooksLib
+2752538 drwxr-xr-x.  2 winlin winlin 4096 Jun 12 23:00 Desktop
+2752832 -rw-r--r--.  1 winlin winlin  152 Jun 27 23:14 dic.txt
+2752542 drwxr-xr-x.  2 winlin winlin 4096 Jun 13 00:27 Documents
+2752539 drwxr-xr-x.  3 winlin winlin 4096 Jun 30 21:24 Downloads
+2757587 -rw-rw-r--.  1 winlin winlin   62 Jun 30 10:22 ftp
+134143 drwxrwxr-x.  2 winlin winlin 4096 Jun 30 22:44 haveSeen
+2752543 drwxr-xr-x.  2 winlin winlin 4096 Jun 12 23:00 Music
+2753308 drwx------.  2 winlin winlin 4096 May 21 01:06 myBash
+2753311 drwx------.  4 winlin winlin 4096 Jun 30 10:42 myData
+2755507 drwx------. 16 winlin winlin 4096 Jun 30 11:11 mypro
+131084 drwxrwxr-x.  3 winlin winlin 4096 Jun 22 14:41 myUseSoft
+264025 drwxrwxr-x.  3 winlin winlin 4096 Jun 22 18:26 News
+2755815 drwx------.  4 winlin winlin 4096 May 21 01:08 notes
+2756241 drwx------.  3 winlin winlin 4096 Jun 30 22:44 nowSeeing
+2752544 drwxr-xr-x.  6 winlin winlin 4096 Jun 21 14:25 Pictures
+2752853 -rw-r--r--.  1 winlin winlin  322 Jun 16 20:30 questions
+第一排的数字代表文件标号，即i-node节点。
+
+ln命令
+硬链接
+对于一个文件：
+给一个文件创建硬链接，只会增加该文件的一个别名，连接数会增加一，两个文件名对应同一块磁盘空间，
+如果想要删除一个链接名，只是会使连接数减一，只有当连接数为1然后再删除的时候才会彻底删除文件的硬盘空间；
+不能给一个目录创建硬链接，只能给一个文件夹创建软连接：
+软连接
+软连接文件中存放的只是指向文件的文件名，相当于windows系统的快捷方式。
+软连接文件和源文件分别占用不同的磁盘空间。他们有不同的文件标示符。
+可以给一个文件夹创建一个软连接，直接就进入对应文件夹下。
+软连接可以跨文件系统建立软连接。
+
+(2011-7-4)
+head  查看文件的头部10行
+tail 查看文件的尾部的后10行
+
+真实用户身份：当你login登录的时候的身份
+有效用户身份：su切换的用户，是指我们进行实际操作时的身份
+
+find / -name perl
+find . -mtime 10 -print
+find . -perm 664
+find $HOME -mtime 0
+find . -type f -exec file '{}' \;       用find遍历当前目录以及其子目录，然后用file命令依次处理各个文件
+
+
+ls -l | grep -v winlin
+ls -l | grep ^d
+grep 'man' note.txt 在note.txt文件中搜索含有'man'的行
+
+
+ls file*|xargs grep dd
+xargs
+EXAMPLES
+find /tmp -name core -type f -print | xargs /bin/rm -f
+
+Find  files  named core in or below the directory /tmp and delete them.
+Note that this will work incorrectly if there are  any  filenames  con‐
+taining newlines or spaces.
+详见 man xargs
+find /tmp -name core -type f -print | xargs /bin/rm -f
+find /tmp -name core -type f -type f  -print0 | xargs -0 /bin/rm -f
+
+
+dd 转换文件的格式 
+
+wc统计行数，单词数，和字符数
+wc - print newline, word, and byte counts for each file
+wc -c  统计单词数 
+wc -l  统计行数
+
+du - estimate file space usage
+du -k 单位是KB
+du -s 只显示本目录，不显示子目录
+du -h 以对人类友好的方式来显示文件或文件夹的大小
+du -d N 递归显示目录的层次
+du -h -d 1 显示当前目录和子目录总体的情况
+
+ps列出当前用户正在运行的进程
+winlin@localhost ~$ ps
+PID   TTY          TIME      CMD
+1954  pts/0    00:00:00 bash
+3944 pts/0    00:00:00 ps
+TTY是终端编号，代表了链接到服务器的一个终端的编号；
+CMD是那个命令创建的该进程
+
+/usr/bin/ps
+ps  -f 列出详细的进程信息
+winlin@localhost ~$ ps -f
+UID        PID    PPID    C STIME  TTY          TIME      CMD
+winlin    1954  1948   0 09:16   pts/0    00:00:00 bash
+winlin    3999  1954  0 10:18    pts/0    00:00:00 ps -f
+PPID父进程ID
+C 列现在没有什么意义
+STIME 进程已经运行的时间
+ps -e 显示在本机所有的进
+winlin@localhost ~$ ps -e
+PID TTY          TIME CMD
+1   ?        00:00:02 systemd
+2  ?        00:00:00 kthreadd
+3  ?        00:00:00 ksoftirqd/0
+6  ?        00:00:00 migration/0
+TTY中'?'表示该进程不是由某一个终端发起的，一般是有系统启动时发起的守护进程
+
+ps -ef|grep 1245 搜索1245进程的信息
+
+/usr/ucb/ps 有的unix系统还有这一个ps命令，要比/usr/bin/ps更复杂，但是有的系统就没有该版本的ps；
+
+$ps -ef 
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.5  55576 23220         ?         Ss    09:15   0:02 /sbin/init
+root         2  0.0  0.0      0     0              ?         S      09:15   0:00 [kthreadd]
+winlin    1954  0.0  0.1 119488  5160      pts/0    Ss   09:16   0:00 bash
+root      1184  0.8  0.7 135884 30904     tty1     Ss+  09:15   0:44 /usr/bin/Xorg :0 -background none -verbose -auth /var/run/gd
+root      1199  0.0  0.0   4144   584        tty3     Ss+  09:15   0:00 /sbin/agetty tty3 38400
+root      1200  0.0  0.0   4144   584       tty2     Ss+  09:15   0:00 /sbin/agetty tty2 38400
+root      1204  0.0  0.0   4144   588       tty6     Ss+  09:15   0:00 /sbin/agetty tty6 38400
+TTY中的pts代表终端(本地/远程)编号
+  tty*代表本地设备编号，常见如0代表键盘，1代表显示器，2代表错误输出通常也是显示器；
+
+其中的STAT表示进程的当前状态：
+S---sleep状态
+R---running状态
+T---terminate挂起状态
+O---可运行状态，等待CPU使用权，等待CPU轮训
+Z----zombine 僵尸状态
+当父进程先于子进程结束时，子进程会变成孤儿进程，然后init会变成该子进程的父进程；
+当子进程结束时向父进程发送结束消息，但是由于某些原因导致父进程没有接收到子进程的结束信息或处理不正确，
+从而导致子进程实际上已经结束，但是在父进程的进程列表中仍然保留该子进程的信息，此时该子进程就是僵尸进程。
+僵尸进程本质是不存在的进程，只是在父进程的进程表里面保留有记录的进程；
+大量的僵尸进程可能导致进程列表被填满，从而导致系统的严重错误；较少的情况下问题不大。
+
+kill
+杀掉一个进程的本质是向一个进程发送一个SIGTERM信号,进程的终止是该进程自己终止的。当然kill可以向进程发送很多种信号。
+kill -9   任何本用户启动的进程不可忽略该消息，SIGKILL；但是也是只能让自己启动的进程终止，对其他用户的进程无效。
+kill -l 列出所有的信号。
+kill -15是默认的信号SIGTERM。
+
+pkill process_name 给所有的某进程发信号
+pkill sleep会给所有的sleep进程发送SIGTERM信号。
+
+
+jobs查看当前shell正在运行的命令
+(num就是jobs中列出的进程序号)
+fg %num 把编号为num的进程放到前台运行
+bg %num 把编号为num的进程放到后台运行
+
+ctrl+z挂起当前终端中前台运行的进程
+ctrl+c结束当前终端中前台运行进程
+在C shell中可以使用stop把在后台运行的进程挂起。
+在Bash shell没有stop命令，所以只能把进程先放到前台，然后使用ctrl+z来把进程挂起。
+
+
+
+网络部分
+Important concepts
+回绕地址，即本地回环地址
+
+netstat -r -n 显示本机的路由表
+
+telnet是应用层的应用，但是其底层实现使用的是TCP/IP协议
+telnet默认端口号23；ftp默认端口号21
+
+rlogin从一个远程服务器登录另一台远程服务器，要求用户在两台服务器中都用相同的用户名。
+
+ftp:
+cd   改变远程目录；lcd 改变本地目录
+dir  显示当前目录中的文件
+bye 离开
+bin,asc 二进制文件还是文本文件
+get,put,mget,mput  下载/上传文件
+hash 下载的时候显示下载进度条
+prompt 设置提示符
+在本地执行命令 "!command"
+
+环境变量
+LANG
+设置LANG可以改变当前语言显示的类别
+%>LANG=C  设置成英文显示
+
+$>VAR1=asdf  定义一个局部环境变量，只在本terminal下有效
+$>export VAR1 把一个局部变量编程全局环境变量
+$>export VAR2=asddsf 也可以一步完成
+
+让修改一直有效shell的配置文件:
+bash 为 ~/.bash_profile 这个文件每次启动系统的时候执行一次
+       ~/.bashrc 这个文件在每新建一个terminal的时候都执行一次
+
+让修改过的配置文件立即生效：
+source  .bashrc
+
+在C shell环境下,c-shell的语法和bash语法有些不同
+局部变量 set VAR=sdfs
+全局变量 setenv VAR sdfd
+设置C-Shell的配置文件： ~/.cshrc
+
+crontab 
+crontab -l 列出当前已有的计划任务
+crontab -e 编辑当前计划任务----》要设置 EDITOR变量
+crontab -r 删除计划任务
+
+* * * * *  command
+分 时 日 月 星期几 执行的命令
+
+执行计划任务结束以后，会向/var/spool/mail/ 里面发送一封邮件
+
+
+
+
+
+
+
+	
+

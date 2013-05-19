@@ -1,0 +1,17 @@
+1、写一个函数，用来检查一个字符串是否是数字字符串。
+isdigitstr("123"):1, isdigitstr("asfw"):0, isdigitstr("12f"):0
+
+2、写一个函数，用来检查一个字符串是否是实数字符串。
+isreal("12.3"):1,isreal("-45"):1,isreal("as"):0,isreal("1.w"):0
+3、写一个函数，用来把一个字符串用指定的字符作为分隔符分割成若干个子串输出。
+substr("abc:de:fghi:jk",':')输出
+abc
+de
+fghi
+jk
+
+4、写一个函数，用来返回一个字符串中重复出现的最长字串的长度及其开始地址。
+const char* p=NULL;
+int len=maxsubstr("qweohiuweyowohifpw",&p);
+输出:len=3, substr=ohi
+

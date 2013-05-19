@@ -1,0 +1,45 @@
+>>>>>
+运算符重载
+C++中的运算符实际上通过调用运算符函数来实现的。
+在一个类中，不要同时把一个运算符重载为友元函数和成员函数，会出现歧义。
+如果返回值是一个临时值的话，在C/C++语言里面通常被看成常量，一般要用const修饰，以防止该临时值被用作左值。
+
+在编写代码的时候，要时刻记着是否应该添加const！！！
+
+前++
+Classtype& operator++()
+{          
+      ++x;
+      return *this
+}
+后++
+const Classtype operator++(int)   //返回临时值,声明为const以防止当作左值
+{
+      Classtype tmp(x);
+      ++x;
+      return tmp;
+}
+
+不可被用户重载的运算符:
+           ::
+           .
+           ->*
+           ?:
+           typeid
+           sizeof
+（The typeid operator returns a reference to a type_info object that describes ‘object’.）
+另外，不可以对基本类型进行运算符重载，必须包含一个非基本类型作为参数；
+     也不可以创造运算符；
+    
+还可以重载 '->','*','[]'，还有new和delete，都可以重载。
+
+
+>>>>>>>>>>>>>>
+/*
+  如果自己重载了new，就必须自己定义delete
+  C++保证在new调用结束后，类的构造函数一定会调用
+  同样在调用delete之前，类的析构函数一定会调用
+
+  new和new[]；delete和delete[]都是两个不同的操作符
+  对new[]的空间是一次性分配的，但是多次调用构造函数
+ */

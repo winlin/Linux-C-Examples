@@ -1,0 +1,141 @@
+		>>>>>>>UC 文件目录操作<<<<<<<<<<
+目录的创建：
+权限过滤器 umask
+当你新建一个文件/目录的时候，默认权限都会减去这个umask，来屏蔽掉一些权限。
+默认是0002（8进制）。 umask 0700将会很有趣.
+
+getcwd()
+chdir()
+mkdir()
+
+#icnlude <sys/stat.h>
+#include <dirent.h>
+struct DIR 是由内核来维护的
+opendir()返回一个DIR*，每次调用都会使DIR*指向下一个目录，返回一个dirent结构变量，
+注意里面的d_name只是文件名，不包括路径。
+
+readdir() read a directory
+#include <dirent.h>
+struct dirent *readdir(DIR *dirp);
+注意里面的d_name只是文件名，不包括路径。
+
+closedir()使用opendir()打开目录以后，应该及时关闭
+#include <sys/types.h>
+#include <dirent.h>
+int closedir(DIR *dirp);
+
+scandir()
+NAME
+       scandir, alphasort, versionsort - scan a directory for matching entries
+
+SYNOPSIS
+       #include <dirent.h>
+       int scandir(const char *dirp, struct dirent ***namelist,
+              int (*filter)(const struct dirent *),
+              int (*compar)(const struct dirent **, const struct dirent **));
+
+       int alphasort(const void *a, const void *b);
+       int versionsort(const void *a, const void *b);
+DESCRIPTION
+       The scandir() function scans the directory dirp, calling filter() on each directory entry.  Entries for which fil‐
+       ter() returns nonzero are stored in strings allocated via malloc(3), sorted using  qsort(3)  with  the  comparison
+       function  compar(),  and  collected  in  array  namelist which is allocated via malloc(3).  If filter is NULL, all
+       entries are selected.
+
+       The alphasort() and versionsort() functions can be used as the comparison function  compar().   The  former  sorts
+       directory entries using strcoll(3), the latter using strverscmp(3) on the strings (*a)->d_name and (*b)->d_name.
+
+     #define _SVID_SOURCE
+       /* print files in current directory in reverse order */
+       #include <dirent.h>
+       int
+       main(void)
+       {
+           struct dirent **namelist;
+           int n;
+
+           n = scandir(".", &namelist, 0, alphasort);
+           if (n < 0)
+               perror("scandir");
+           else {
+               while (n--) {
+                   printf("%s\n", namelist[n]->d_name);
+                   free(namelist[n]);
+               }
+               free(namelist);
+           }
+       }
+
+遍历一个目录树
+ftw()
+nftw()
+ftw, nftw - file tree walk
+SYNOPSIS
+       #include <ftw.h>
+
+       int ftw(const char *dirpath,
+               int (*fn) (const char *fpath, const struct stat *sb,
+                          int typeflag),
+               int nopenfd);
+
+       #define _XOPEN_SOURCE 500   /* See feature_test_macros(7) */
+       #include <ftw.h>
+
+       int nftw(const char *dirpath,
+               int (*fn) (const char *fpath, const struct stat *sb,
+                          int typeflag, struct FTW *ftwbuf),
+               int nopenfd, int flags);
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+文件操作
+建立软连接
+symlink()
+#include <unistd.h>
+int symlink(const char *oldpath, const char *newpath);
+readlink()
+link()
+unlink()
+创建一个文件：
+NAME
+       creat - create a new file or rewrite an existing one
+SYNOPSIS
+       #include <sys/stat.h>
+       #include <fcntl.h>
+       int creat(const char *path, mode_t mode);
+The function call:
+              creat(path, mode)
+       shall be equivalent to:
+              open(path, O_WRONLY|O_CREAT|O_TRUNC, mode)
+
+应该使用open()               
+注意，创建或打开一个文件以后，都要使用close来关闭它。
+open()函数是一个可变参数函数，默认实现了两个形式：
+ #include <sys/types.h>
+       #include <sys/stat.h>
+       #include <fcntl.h>
+
+       int open(const char *pathname, int flags);
+       int open(const char *pathname, int flags, mode_t mode);
+
+O_EXCL：Ensure that this call creates the file
+	一般与O_CREAT联合起来使用，能够保证该文件一定是由当前进程创建的。
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+lseek()
+write()
+read()
+
+       lseek - reposition read/write file offset
+
+SYNOPSIS
+       #include <sys/types.h>
+       #include <unistd.h>
+       off_t lseek(int fd, off_t offset, int whence);
+
+whence as follows:
+       SEEK_SET
+              The offset is set to offset bytes.
+       SEEK_CUR
+              The offset is set to its current location plus offset bytes.
+       SEEK_END
+              The offset is set to the size of the file plus offset bytes.
+

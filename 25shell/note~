@@ -1,0 +1,61 @@
+select分支命令，可用于菜单选择，使用 $REPLY可获得用户的输入
+
+>>>>>>>>>>>>>
+find ../day04 -name "*.sh"
+在命令里面如果有通配符，shell会首先替换通配符，所以，要使用“”双引号。
+find ~ -type d
+"{}"大括号可以代表find的所有结果
+find ../day04 -name "*.sh" -exec cp '{}' ../tmp \;
+(把{}和;分别使用单引号和反斜杠转意，是为了防止shell对他们的解释)
+
+find ../day04 -name "*.sh"|xargs ls -l
+xargs可以把获得的参数作为一个参数，一次性处理提高效率
+
+>>>>>>>>>>>>>>>
+awk -F 在后面把什么当成分隔符,每一项分别为$1,$2,$3...
+awk -F : '{print $1"\t" $3}'  /etc/passwd   #执行的命令需要使用'{}' 来括起来
+awk -F: '{print $1"\t"$3}' /etc/passwd | head
+awk -F: '{print $1"\t"$3}' /etc/passwd | tail
+awk -F: 'BEGIN{print "====="};{print $1"\t"$3};END{print "====="}' /etc/passwd |more
+BEGIN和END只会在开始和结束时执行一次。
+awk -F: 'BEGIN{sum=0};{sum=sum+1;print $1"\t"$3};END{print sum}' /etc/passwd
+里面的变量操作时不用使用‘$’符号
+ls -l | awk '{print $9"\t"$5}'
+
+>>>>>>>>>>>>>>>>
+sed用于字符替换
+ls | sed -e 's/sh/SH/'
+ls | sed -e 's/sh/SH/g' 全部替换成SH
+ls | sed -e 's/sh//g' 全部替换成空
+
+>>>>>>>>>>>>
+tr专门用于字符转换
+tr - translate or delete characters
+ls | tr 'a-z' 'A-Z'    #把小写换成大写
+
+
+>>>>>>>>>>>>>>
+函数
+hello()
+{
+
+}
+定义完函数以后，就可以直接使用函数名调用
+函数体必须以分号或者新行结尾。
+有返回值但是不会输出
+因为``的作用是获取执行命令的输出(字符串)，因为return不是输出所以a空值；
+$#代表参数的个数
+$*代表所有的参数，当作一个字符整体返回；
+$@也是代表所有的参数，它可以每个参数返回一个字符串
+
+shift
+while(($#>0))
+do
+deal $1
+      shift            #shift会依次把参数往左移一个参数，shift n跳到第n个参数
+done
+相当于:
+for var in $*
+do
+	deal $var
+done

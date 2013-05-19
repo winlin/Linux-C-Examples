@@ -1,0 +1,49 @@
+#include "userdata.h"
+UserData::UserData()
+{
+	pthread_mutex_init(&mutex,0);
+	pthread_cond_init(&cond,0);
+}
+UserData::~UserData()
+{
+	pthread_mutex_destroy(&mutex);
+	pthread_cond_destroy(&cond);
+}
+
+void UserData::push_data(logdata num)
+{
+	
+	
+	pthread_mutex_lock(&mutex);	
+	while(data.size()>1024*50){
+	printf("data many wait\n");
+	pthread_mutex_unlock(&mutex);
+	pthread_cond_signal(&cond);
+	}
+	data.push_back(num);
+	printf("insert data notice\n",num.durations);
+	pthread_cond_broadcast(&cond);
+	pthread_mutex_unlock(&mutex);
+}
+
+logdata  UserData::pop_data()
+{
+	logdata re;
+	pthread_mutex_lock(&mutex);
+	while(data.empty())
+	{
+		printf("no data wait...\n");
+		pthread_cond_wait(&cond,&mutex);
+	}
+	re=data.front();
+	data.pop_front();
+	pthread_mutex_unlock(&mutex);
+	return re;
+	
+}
+int UserData::getsize(){
+   pthread_mutex_lock(&mutex);
+   int s=data.size();
+   pthread_mutex_unlock(&mutex);
+   return s;
+}
